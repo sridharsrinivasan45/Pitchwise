@@ -1,0 +1,33 @@
+{
+  "summary": "P0 bug fix verified END-TO-END: historical matches now load the Live experience via ?match_id=<id>. Tested 3 different historical match_ids (1535465 GT/RCB, 1535464 RR/GT, 1529312 RR/MI) + featured root + invalid id + full Time Machine -> Live navigation flow (2 different cards). All target scenarios pass. Skip-to-death now dynamic per match. WhySheet slide-in still opens but data fetch fails due to a pre-existing (NOT introduced by this fix) at_ball_id format bug that also affects the featured match.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/ratings/{match_id}/{player_id}?at_ball_id=...", "issue": "Returns 404 when at_ball_id uses the format the frontend sends ('<match>-i1-003'). Only well-formed ids like '<match>-i1-o1.6' or omitting the param return 200. Reproducible on ALL matches including featured — pre-existing bug, not a regression from the P0 fix."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "WhySheet on any match (featured + historical)", "issue": "Panel slides in with correct player_name/team/role header, but body shows 'Request failed with status code 404'. Root cause: frontend constructs at_ball_id like '1535465-i1-003' (missing 'o' prefix and using integer ball index) whereas backend stores ball_ids like '1535465-i1-o1.6'. Pre-existing bug — not caused by the Live/?match_id= fix — but user-visible regression on ALL rating-cell clicks.", "affected_selectors": ["rating-<player_id>", "why-sheet"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix at_ball_id construction in the ImpactBoard/WhySheet callsite so the id it passes matches the backend's ball_id format (e.g. use ball.ball_id from state directly instead of building a synthetic '<match>-i<inn>-<index>' string).",
+    "Optional: On the backend, make /api/ratings/{match_id}/{player_id} tolerant to a missing/unknown at_ball_id (fall back to latest snapshot instead of 404) to be resilient to client id mistakes."
+  ],
+  "critical_code_review_comments": [
+    "Live.jsx correctly reads useSearchParams and re-fetches on requestedMatchId change — verified by 4 unique matches rendering distinct headers.",
+    "ReplayControls only shows Skip-to-finish when onSkipToDeath is provided — verified visible on all 4 loaded matches and click moved ball counter from 6 -> 202/233 for match 1535465.",
+    "Momentum chart renders progressively via SSE on historical matches (SVG paths present, curve visible)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only run)", "frontend": "100% on P0 scope; WhySheet body fetch fails (pre-existing)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "P0 (historical match Live loading) is fully fixed. If retesting, use match_ids 1535465, 1535464, 1529312 (all non-featured) and 1359487 (featured). WhySheet 404 is a separate, older bug — verify by hitting /api/ratings/1359487/0a509d6b?at_ball_id=1359487-i1-003 which returns 404 too.",
+  "rca of the issue": "Original P0 bug — three defects fixed together: (1) Live.jsx didn't read the match_id query param, always fetched featured; (2) fallback check `if (!featured.length)` was against an object {matches,total} so it was always truthy-broken; (3) skipTarget was undefined. All three are resolved in the current build. Verified by navigating /?match_id=<id> for three distinct non-featured matches and confirming match-header teams match card data, plus by clicking two different Time Machine cards and confirming distinct matches load (no cache bleed)."
+}

@@ -64,15 +64,17 @@ export default function ReplayControls({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={onSkipToDeath}
-        data-testid="replay-skip-death"
-        className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border/60 text-xs text-muted-foreground hover:text-foreground hover:border-amber-soft transition-colors"
-      >
-        <FastForward className="w-3 h-3" />
-        Skip to the finish
-      </button>
+      {onSkipToDeath && (
+        <button
+          type="button"
+          onClick={onSkipToDeath}
+          data-testid="replay-skip-death"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border/60 text-xs text-muted-foreground hover:text-foreground hover:border-amber-soft transition-colors"
+        >
+          <FastForward className="w-3 h-3" />
+          Skip to the finish
+        </button>
+      )}
     </div>
   );
 }

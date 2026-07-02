@@ -13,33 +13,64 @@ import useMatchStream from "@/hooks/useMatchStream";
 /**
  * Live page — cinematic replay of a match, ball-by-ball.
  * SSE-powered: state ticks per delivery, ratings animate, momentum extends.
+ *
+ * Match resolution:
+ *   ?match_id=<id>  → replay that specific historical match
+ *   (no param)      → fall back to the featured match, if any
  */
-const SKIP_TO_DEATH_BALL = 244; // start of over 20 in KKR's chase (innings 2, Rinku match); dynamic per-match handling comes with Stage 5
-
 export default function Live() {
+  const [params] = useSearchParams();
+  const requestedMatchId = params.get("match_id");
+
   const [match, setMatch] = useState(null);
   const [moments, setMoments] = useState([]); // all-innings moments (for chart dots)
+  const [skipTarget, setSkipTarget] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      setLoading(true);
+      setError(null);
+      setMatch(null);
+      setMoments([]);
+      setSkipTarget(null);
       try {
-        const featured = await fetchMatches({ featured: true });
-        if (!featured.length) { setLoading(false); return; }
-        const [m, mm] = await Promise.all([
-          fetchMatch(featured[0].match_id),
-          fetchMoments(featured[0].match_id, 12),
+        // Resolve which match to load.
+        let targetId = requestedMatchId;
+        if (!targetId) {
+          const featured = await fetchMatches({ featured: true });
+          const list = featured?.matches || [];
+          if (!list.length) {
+            if (!cancelled) setLoading(false);
+            return;
+          }
+          targetId = list[0].match_id;
+        }
+
+        const [m, mm, skip] = await Promise.all([
+          fetchMatch(targetId),
+          fetchMoments(targetId, 12),
+          fetchSkipToDeath(targetId).catch(() => null),
         ]);
+        if (cancelled) return;
         setMatch(m);
         setMoments(mm);
+        setSkipTarget(skip?.skip_to_ball ?? null);
       } catch (e) {
-        setError(e.message || "Failed to load match");
+        if (cancelled) return;
+        setError(
+          e?.response?.status === 404
+            ? "Match not found in the archive."
+            : e.message || "Failed to load match"
+        );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, []);
+    return () => { cancelled = true; };
+  }, [requestedMatchId]);
 
   const {
     state, currentBall, narration,
@@ -153,7 +184,7 @@ export default function Live() {
           onPause={pause}
           onSetSpeed={setSpeed}
           onRestart={restart}
-          onSkipToDeath={() => seekToBall(skipTarget)}
+          onSkipToDeath={skipTarget != null ? () => seekToBall(skipTarget) : null}
         />
       </div>
 
