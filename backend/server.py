@@ -14,6 +14,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from routes.matches import router as matches_router  # noqa: E402
 from routes.stream import router as stream_router  # noqa: E402
+from routes.ratings import router as ratings_router  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("pitchwise")
@@ -35,6 +36,7 @@ async def root():
 
 api.include_router(matches_router)
 api.include_router(stream_router)
+api.include_router(ratings_router)
 app.include_router(api)
 
 app.add_middleware(

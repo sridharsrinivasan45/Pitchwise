@@ -81,7 +81,6 @@ export default function useMatchStream(matchId, { autoPlay = true, initialSpeed 
     setCompleted(false);
     if (autoPlay) openStream(0, initialSpeed);
     return () => closeStream();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
   const play = useCallback(() => {

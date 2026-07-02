@@ -316,6 +316,7 @@ def _flag_moments(balls: list[dict]) -> list[dict]:
                 "impact_score": round(swing * 30 + b["pressure_index"] / 2 + 2.0, 2),
                 "narrative": f"Wicket in O{b['over']+1}.{b['ball']} — pressure index {b['pressure_index']}.",
                 "over": b["over"], "ball": b["ball"], "sequence": i,
+                "batter_id": b["batter_id"], "bowler_id": b["bowler_id"],
             })
         elif b["runs_batter"] == 6:
             is_finish_over = (b["over"] == 19)
@@ -329,6 +330,7 @@ def _flag_moments(balls: list[dict]) -> list[dict]:
                     else f"Rinku six in O20 — pressure index {b['pressure_index']}, WP shift {round(swing*100,1)}%."
                 ),
                 "over": b["over"], "ball": b["ball"], "sequence": i,
+                "batter_id": b["batter_id"], "bowler_id": b["bowler_id"],
             })
     # Sort by impact desc, keep top 12
     moments.sort(key=lambda m: m["impact_score"], reverse=True)

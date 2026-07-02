@@ -7,6 +7,7 @@ import MomentumChart from "@/components/live/MomentumChart";
 import ImpactBoard from "@/components/live/ImpactBoard";
 import MomentCard from "@/components/live/MomentCard";
 import ReplayControls from "@/components/live/ReplayControls";
+import WhySheet from "@/components/rating/WhySheet";
 import useMatchStream from "@/hooks/useMatchStream";
 
 /**
@@ -60,6 +61,48 @@ export default function Live() {
     .slice(0, 3);
 
   const activePlayerId = currentBall?.batter_id || null;
+
+  // WhySheet state — declared BEFORE early returns so hook order stays stable
+  const [whyOpen, setWhyOpen] = useState(false);
+  const [whyPlayer, setWhyPlayer] = useState(null);
+  const [whyAtBall, setWhyAtBall] = useState(null);
+
+  const openWhyForRow = (row) => {
+    setWhyPlayer({
+      player_id: row.player_id, player_name: row.player_name, team: row.team, role: row.role,
+    });
+    setWhyAtBall(state?.latest_ball_id || null);
+    setWhyOpen(true);
+  };
+
+  const openWhyForMoment = (moment) => {
+    if (!moment) return;
+    // Prefer the actual attributed player from the moment doc.
+    // For a wicket → bowler is the credited player.
+    // For a boundary/turning point → batter is the credited player.
+    const isWicket = moment.type === "wicket_key";
+    const preferredId = isWicket ? moment.bowler_id : moment.batter_id;
+    let target = null;
+    if (preferredId) {
+      target = (state?.top_impact || []).find((r) => r.player_id === preferredId);
+      if (!target) {
+        // Player is not currently in top 6 — construct a minimal row from the id
+        target = { player_id: preferredId, player_name: preferredId, team: "", role: isWicket ? "bowler" : "batter" };
+      }
+    } else {
+      // Legacy fallback: pick from impact board by role
+      const impact = state?.top_impact || [];
+      target = isWicket
+        ? impact.find((r) => r.role === "bowler")
+        : impact.find((r) => ["batter", "keeper", "allrounder"].includes(r.role)) || impact[0];
+    }
+    if (!target) return;
+    setWhyPlayer({
+      player_id: target.player_id, player_name: target.player_name, team: target.team, role: target.role,
+    });
+    setWhyAtBall(moment.ball_id);
+    setWhyOpen(true);
+  };
 
   if (loading) {
     return (
@@ -124,7 +167,7 @@ export default function Live() {
       </div>
 
       <div className="mt-10">
-        <ImpactBoard rows={state?.top_impact || []} activePlayerId={activePlayerId} />
+        <ImpactBoard rows={state?.top_impact || []} activePlayerId={activePlayerId} onExplain={openWhyForRow} />
       </div>
 
       <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="live-moments-strip">
@@ -133,7 +176,7 @@ export default function Live() {
             <p className="text-[10px] uppercase tracking-widest text-dim">Moment of the match</p>
             <p className="font-editorial text-lg leading-tight">The ball that changed everything</p>
           </div>
-          <MomentCard moment={topMoment} />
+          <MomentCard moment={topMoment} onExplain={openWhyForMoment} />
         </div>
 
         <div>
@@ -143,7 +186,7 @@ export default function Live() {
           </div>
           <div className="flex flex-col gap-3">
             {otherMoments.map((m) => (
-              <MomentCard key={m.ball_id} moment={m} />
+              <MomentCard key={m.ball_id} moment={m} onExplain={openWhyForMoment} />
             ))}
             {otherMoments.length === 0 && (
               <div className="rounded-lg border border-border/50 bg-card/40 p-5 text-dim text-sm">
@@ -153,6 +196,15 @@ export default function Live() {
           </div>
         </div>
       </div>
+
+      <WhySheet
+        open={whyOpen}
+        onClose={() => setWhyOpen(false)}
+        matchId={match.match_id}
+        playerId={whyPlayer?.player_id}
+        atBallId={whyAtBall}
+        seedRow={whyPlayer}
+      />
 
       <footer className="mt-16 pt-6 border-t divider-soft text-xs text-dim flex items-center justify-between">
         <span>Powered by the PitchWise impact engine · adapter v0.1 (placeholder)</span>

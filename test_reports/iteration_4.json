@@ -1,0 +1,46 @@
+{
+  "iteration": 4,
+  "milestone": "M4 — WhySheet + PitchAnimation (crown jewel)",
+  "date": "2026-07-02",
+  "scope": "Deterministic, commentator-quality rating explainability with per-ball evidence",
+  "backend": {
+    "added": [
+      "routes/ratings.py — GET /api/ratings/{match_id}/{player_id}?at_ball_id=xxx",
+      "engine/contracts.Moment now has optional batter_id + bowler_id (populated in seed)"
+    ],
+    "adapter_interface": "UNCHANGED — same 8 methods, still v0.1 placeholder engine",
+    "verified_via_curl": "Rinku breakdown → 6 components, top 5 are PRESSURE_BOUNDARY with weights +2.35, +2.20, +2.05, +1.90, +1.75; final rating 9.9; moments now include batter_id=rinku bowler_id=yash"
+  },
+  "frontend": {
+    "added": [
+      "components/rating/WhySheet.jsx — slide-in right panel, spring animation, Esc/backdrop close",
+      "components/rating/PitchAnimation.jsx — SVG cricket field with deterministic ball/shot trajectory"
+    ],
+    "updated": [
+      "components/live/MomentCard.jsx — now clickable, calls onExplain(moment)",
+      "components/live/MomentumChart.jsx — hoisted Recharts render-prop components to module scope (lint fix)",
+      "pages/Live.jsx — wired WhySheet, openWhyForRow (impact board), openWhyForMoment (moment cards with correct batter/bowler attribution)",
+      "hooks/useMatchStream.js — removed obsolete eslint-disable comment"
+    ],
+    "verified_via_screenshot": [
+      "Rinku's WhySheet: headline reads 'Rinku Singh is rated 9.9 because 5 sixes in the death overs happened when the match hung on every ball.'",
+      "Rating evolution: sparkline rises smoothly 6.0 → 9.9",
+      "Moment that mattered most: pitch animation showing six trajectory, +2.35 impact",
+      "Counterfactual: 'Without this one delivery, Rinku Singh would be rated around 9.1 instead of 9.9.'",
+      "What lifted the rating: 5 Six under pressure rows, weights +2.35, +2.20, +2.05, +1.90, +1.75, all Over 20.x DEATH",
+      "Moment-card tap opens Rinku Singh (correct batter attribution)"
+    ],
+    "console_errors": 0,
+    "lint": "Clean across all authored files (only ignored shadcn ui/ files remain)"
+  },
+  "product_principles_verified": {
+    "one_question_answered": "PASS — headline directly answers 'why is this player rated this way'",
+    "cricket_fan_language": "PASS — 'Six under pressure', 'in the death', no p-values or z-scores",
+    "commentator_tone_not_data_scientist": "PASS — deterministic templates read like commentary",
+    "traceable_to_data": "PASS — every claim maps to a component with ball_id",
+    "no_invented_ai_commentary": "PASS — no LLM calls in this milestone; all templates",
+    "clarity_over_complexity": "PASS — one pitch animation, one headline, one evolution chart, three lists"
+  },
+  "status": "pass",
+  "next_milestone": "Engine integration — user swaps real Python engine into engine/core, adapter internals rewire, all 4 milestone surfaces revalidated"
+}

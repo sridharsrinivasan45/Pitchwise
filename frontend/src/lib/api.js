@@ -34,7 +34,8 @@ export async function fetchMoments(matchId, topN = 5) {
   return data.moments;
 }
 
-export async function fetchImpactBoard(matchId) {
-  const { data } = await api.get(`/matches/${matchId}/impact-board`);
-  return data.impact_board;
+export async function fetchRatingBreakdown(matchId, playerId, atBallId) {
+  const params = atBallId ? { at_ball_id: atBallId } : {};
+  const { data } = await api.get(`/ratings/${matchId}/${playerId}`, { params });
+  return data;
 }

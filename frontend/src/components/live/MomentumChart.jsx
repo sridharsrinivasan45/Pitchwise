@@ -3,6 +3,36 @@ import {
   ReferenceDot, Tooltip,
 } from "recharts";
 
+function ChartTooltip({ teamShort }) {
+  return ({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null;
+    const p = payload[0].payload;
+    return (
+      <div className="glass rounded-md px-3 py-2 border border-border/60 text-xs">
+        <div className="rating-num text-foreground">Over {p.label}</div>
+        <div className="text-dim">
+          {teamShort[0]} WP{" "}
+          <span className="rating-num" style={{ color: "hsl(var(--primary))" }}>
+            {p.wp}%
+          </span>
+        </div>
+      </div>
+    );
+  };
+}
+
+function LiveHeadShape(props) {
+  return (
+    <g>
+      <circle cx={props.cx} cy={props.cy} r={11} fill="hsla(38, 92%, 55%, 0.25)">
+        <animate attributeName="r" values="7;14;7" dur="1.4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.6;0;0.6" dur="1.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={props.cx} cy={props.cy} r={5} fill="hsl(38, 92%, 55%)" stroke="hsl(220, 15%, 6%)" strokeWidth={2} />
+    </g>
+  );
+}
+
 /**
  * Momentum chart — win probability for team1 across the innings.
  * Full width, ~280px tall. Dots on flagged moments.
@@ -66,21 +96,7 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
             />
             <Tooltip
               cursor={{ stroke: "hsla(38,92%,55%,0.4)", strokeWidth: 1 }}
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
-                const p = payload[0].payload;
-                return (
-                  <div className="glass rounded-md px-3 py-2 border border-border/60 text-xs">
-                    <div className="rating-num text-foreground">Over {p.label}</div>
-                    <div className="text-dim">
-                      {teamShort[0]} WP{" "}
-                      <span className="rating-num" style={{ color: "hsl(var(--primary))" }}>
-                        {p.wp}%
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
+              content={ChartTooltip({ teamShort })}
             />
             <Area
               type="monotone"
@@ -112,15 +128,7 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
                 stroke="hsl(220, 15%, 6%)"
                 strokeWidth={2}
                 isFront
-                shape={(props) => (
-                  <g>
-                    <circle cx={props.cx} cy={props.cy} r={11} fill="hsla(38, 92%, 55%, 0.25)">
-                      <animate attributeName="r" values="7;14;7" dur="1.4s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.6;0;0.6" dur="1.4s" repeatCount="indefinite" />
-                    </circle>
-                    <circle cx={props.cx} cy={props.cy} r={5} fill="hsl(38, 92%, 55%)" stroke="hsl(220, 15%, 6%)" strokeWidth={2} />
-                  </g>
-                )}
+                shape={LiveHeadShape}
               />
             )}
           </AreaChart>

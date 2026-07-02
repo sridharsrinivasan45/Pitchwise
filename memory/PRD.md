@@ -92,7 +92,7 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 
 ## Backlog (P0/P1)
 
-- P0 M4 WhySheet + PitchAnimation (crown jewel — clickable rating breakdown with per-ball evidence)
+- **NEXT: Engine integration** — swap placeholder engine for real Python analytics engine via adapter
 - P0 M4 WhySheet + PitchAnimation (crown jewel)
 - P0 M7 Ask PitchWise + M5 Narrator (needs Emergent LLM key wired)
 - P1 M6 Historical Parallels (needs 5 more curated matches ingested)
@@ -104,13 +104,56 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 Auth, notifications, social layer, multi-league (BBL/PSL/WPL), video highlights, fantasy team
 builder, blog, settings, onboarding tour, dark-mode toggle.
 
-## Next Immediate Tasks (M4 kick-off, awaiting user green light)
+## Next Immediate Tasks (Engine integration, awaiting user handoff)
 
-1. `GET /api/ratings/{match_id}/{player_id}?at_ball_id=xxx` — return the full RatingBreakdown from the adapter
-2. `WhySheet` component — slide-up sheet with base rating → component list → final rating → similar-innings placeholder
-3. `PitchAnimation` component — SVG pitch diagram, ball trajectory line, shot arc animated
-4. Wire RatingBadge onExplain to open WhySheet with the correct player + current at_ball_id
-5. Wire momentum chart moment dots to open the WhySheet for that ball's key player
+1. User drops real Python engine into `backend/engine/core/`
+2. Rewire `engine/adapter.py` internals to call the real engine (same contract, same 8 methods)
+3. Sanity-check all 4 milestones (M1 endpoints, M2 static UI, M3 SSE replay, M4 WhySheet) with the new engine outputs
+4. Update seed → ingest more matches (target: 6 curated matches for Time Machine)
+
+## Milestones Completed
+
+### M4 — WhySheet + PitchAnimation (✔ verified 2026-07-02)
+
+**Backend (adapter interface UNCHANGED, only additions):**
+- `Moment` contract extended with optional `batter_id` + `bowler_id` (populated in seed) — enables correct player attribution when a moment card is tapped
+- New route `routes/ratings.py` mounted at `GET /api/ratings/{match_id}/{player_id}?at_ball_id=xxx`
+- Delegates entirely to `adapter.get_rating_breakdown` — no engine logic here
+
+**Frontend:**
+- `components/rating/WhySheet.jsx` — the crown jewel
+  - Slides in from the right (spring 260/30), Esc to close, backdrop click to close
+  - **Header:** team badge · role, player name (editorial 2xl), rating (huge amber 4xl), delta (green/red), base rating (dim)
+  - **Headline:** ONE commentator-quality sentence generated deterministically from the components. Examples:
+    - *"Rinku Singh is rated 9.9 because 5 sixes in the death overs happened when the match hung on every ball."*
+    - Templates for "wickets in death," "boundary-heavy hand," and generic top-contribution fallback
+  - **Rating evolution** — mini sparkline shows the player's rating trajectory across their innings, base → final
+  - **"The moment that mattered most"** — highlighted card with `PitchAnimation` on left + humanized description + raw impact weight
+  - **Counterfactual** — *"Without this one delivery, Rinku Singh would be rated around 9.1 instead of 9.9."*
+  - **"What lifted the rating"** — top 5 positive components, each row: label + over.ball + phase + weight + one-sentence reason
+  - **"What hurt the rating"** — top 4 negatives (only shown when present)
+  - **Footer:** *"Every explanation traces to a ball. No paraphrasing."*
+- `components/rating/PitchAnimation.jsx` — minimal SVG cricket-field diagram (aerial view)
+  - Deterministic geometry from ball outcome: 6 → arc to boundary, 4 → shorter arc, wicket → stumps hit + red X, dot → no shot
+  - Framer motion pathLength animations for delivery + shot
+  - No fabricated data, no ball-tracking pretense
+- `humanizeComponent(reason_code)` maps engine codes to plain-English micro-explanations (PRESSURE_BOUNDARY, DOT_UNDER_PRESSURE, WICKET_KEY_MOMENT, BOUNDARY, ROTATE_STRIKE, CONCEDED_BOUNDARY, CONCEDED_MINOR)
+- `MomentCard` now clickable → opens WhySheet for the moment's attributed player (batter for boundaries/turning points, bowler for wickets)
+- `RatingBadge` `onExplain` wired throughout — impact-board taps + moment-card taps both open the sheet
+- Fixes applied: hooks declared before early returns (React rule of hooks); breakdown state cleared on player change; ESLint hoisted Recharts render-prop components to module scope
+
+**Verified via screenshots:**
+- Impact-board Rinku tap → sheet shows correct headline, 5 sixes in death overs, counterfactual 9.1 vs 9.9, pitch animation of a six trajectory
+- Moment-card tap → correctly opens the batter's sheet (not the top-rated keeper), attribution via `moment.batter_id`
+- Zero console errors after fixes; ESLint clean (only ignored shadcn `ui/` warnings remain)
+
+**Product principles verified for M4:**
+- One question answered ("Why is this player rated this way?") ✓
+- Cricket-fan-comprehensible, no data-scientist jargon ✓
+- Commentator tone (headline, humanized micro-explanations) ✓
+- Every claim traceable to a ball_id in the components list ✓
+- No invented explanations; deterministic templates only ✓
+- Clarity over complexity — one big pitch animation, one headline, one evolution chart, three lists ✓
 
 ## Milestones Completed
 

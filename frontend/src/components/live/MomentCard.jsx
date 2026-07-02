@@ -5,7 +5,7 @@ import { Flame, Circle } from "lucide-react";
  * The current top moment (or latest_moment). Shows type, over.ball, narrative.
  * In M4+ this becomes a jump-in-time trigger for the momentum chart + WhySheet.
  */
-export default function MomentCard({ moment }) {
+export default function MomentCard({ moment, onExplain }) {
   if (!moment) {
     return (
       <div className="rounded-lg border border-border/50 bg-card/40 p-6 text-dim text-sm" data-testid="moment-card-empty">
@@ -15,11 +15,17 @@ export default function MomentCard({ moment }) {
   }
 
   const isTurning = moment.type === "match_turning_point";
+  const clickable = !!onExplain;
+
+  const Wrapper = clickable ? "button" : "article";
 
   return (
-    <article
+    <Wrapper
       data-testid="moment-card"
-      className={`rounded-lg border p-5 bg-card ${isTurning ? "border-amber-soft" : "border-border/60"}`}
+      onClick={clickable ? () => onExplain(moment) : undefined}
+      className={`w-full text-left rounded-lg border p-5 bg-card transition-colors ${
+        isTurning ? "border-amber-soft" : "border-border/60"
+      } ${clickable ? "hover:border-amber-soft cursor-pointer" : ""}`}
     >
       <div className="flex items-center gap-2 mb-3">
         {isTurning ? (
@@ -48,9 +54,9 @@ export default function MomentCard({ moment }) {
 
       <div className="mt-4 flex items-center justify-between">
         <span className="text-xs text-dim">
-          Why did this moment matter? <span className="text-muted-foreground">(coming in the next milestone)</span>
+          {clickable ? "Tap to see why this moment mattered" : "Why did this moment matter?"}
         </span>
       </div>
-    </article>
+    </Wrapper>
   );
 }

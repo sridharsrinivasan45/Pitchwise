@@ -83,6 +83,8 @@ class Moment(BaseModel):
     narrative: str
     over: int
     ball: int
+    batter_id: Optional[str] = None
+    bowler_id: Optional[str] = None
 
 
 class MatchState(BaseModel):
