@@ -76,8 +76,8 @@ def _make_ball(match_id, innings, over, ball_num, batter, bowler, runs, is_wicke
         dismissal_type = random.choice(["caught", "bowled", "lbw", "caught & bowled"])
     # Impact deltas: heavier for boundaries & wickets weighted by pressure
     if is_wicket:
-        b_delta = -0.6 - p_index * 0.05
-        bwl_delta = 0.6 + p_index * 0.08
+        b_delta = -1.8 - p_index * 0.08
+        bwl_delta = 0.9 + p_index * 0.08
     else:
         b_delta = (runs * 0.12) + (0.15 if runs == 6 else 0) + (p_index / 10) * (runs / 6)
         bwl_delta = -(runs * 0.06) + (0.05 if runs == 0 else 0)
@@ -224,8 +224,8 @@ def _build_kkr_chase(target: int = 205):
             wp_before, wp_after, target=target, score=score, wickets=wickets,
         ))
         # Boost impact for these historic balls
-        balls[-1]["batter_impact_delta"] = round(0.7 + (i * 0.05), 3)
-        balls[-1]["bowler_impact_delta"] = round(-0.6 - (i * 0.05), 3)
+        balls[-1]["batter_impact_delta"] = round(1.6 + (i * 0.15), 3)
+        balls[-1]["bowler_impact_delta"] = round(-1.4 - (i * 0.12), 3)
         balls[-1]["commentary"] = f"SIX! Rinku Singh — {['first','second','third','fourth','fifth'][i-1]} six of the over!"
 
     return balls, score
@@ -283,7 +283,11 @@ def _compute_ratings_snapshots(balls: list[dict]) -> list[dict]:
                 "label": label, "weight": round(delta, 3), "ball_id": b["ball_id"],
                 "reason_code": reason, "phase": b["phase"],
             })
-            new_rating = round(max(1.0, min(9.9, prev + delta)), 2)
+            # Dampen delta for the rolling rating so ratings differentiate rather than saturate.
+            # Component "weight" above is still the raw contribution — this only affects the
+            # displayed rating trajectory. Real engine will replace this entirely.
+            scaled = delta * 0.35
+            new_rating = round(max(1.0, min(9.9, prev + scaled)), 2)
             st["rating"] = new_rating
 
             snapshots.append({

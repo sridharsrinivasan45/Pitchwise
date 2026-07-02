@@ -1,0 +1,108 @@
+import {
+  Area, AreaChart, ResponsiveContainer, XAxis, YAxis,
+  ReferenceDot, Tooltip,
+} from "recharts";
+
+/**
+ * Momentum chart — win probability for team1 across the innings.
+ * Full width, ~280px tall. Dots on flagged moments.
+ * Non-interactive in M2 (no on-click); tap-jump wires in M3+.
+ */
+export default function MomentumChart({ momentum = [], moments = [], teamShort = [] }) {
+  if (!momentum.length) {
+    return (
+      <div className="h-[280px] w-full rounded-lg border border-border/50 bg-card/40 flex items-center justify-center text-dim text-sm">
+        Momentum will appear once the match starts.
+      </div>
+    );
+  }
+
+  const data = momentum.map((m, i) => ({
+    idx: i,
+    wp: Math.round(m.wp * 100),
+    label: `${(m.over ?? 0) + 1}.${m.ball}`,
+  }));
+
+  const momentByBallId = new Map(moments.map((m) => [m.ball_id, m]));
+  const dotPoints = momentum
+    .map((m, i) => {
+      const mm = momentByBallId.get(m.ball_id);
+      if (!mm) return null;
+      return { idx: i, wp: Math.round(m.wp * 100), type: mm.type };
+    })
+    .filter(Boolean);
+
+  return (
+    <div className="w-full" data-testid="momentum-chart">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-dim">Momentum</p>
+          <p className="font-editorial text-lg leading-tight">Win probability, ball by ball</p>
+        </div>
+        <p className="text-xs text-dim rating-num">
+          {teamShort[0]} chase · {momentum.length} balls
+        </p>
+      </div>
+
+      <div className="h-[260px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+            <defs>
+              <linearGradient id="wpFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(38, 92%, 55%)" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="hsl(38, 92%, 55%)" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="idx" hide />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fill: "hsla(220,8%,55%,1)", fontSize: 10, fontFamily: "JetBrains Mono" }}
+              axisLine={false}
+              tickLine={false}
+              tickCount={5}
+            />
+            <Tooltip
+              cursor={{ stroke: "hsla(38,92%,55%,0.4)", strokeWidth: 1 }}
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload.length) return null;
+                const p = payload[0].payload;
+                return (
+                  <div className="glass rounded-md px-3 py-2 border border-border/60 text-xs">
+                    <div className="rating-num text-foreground">Over {p.label}</div>
+                    <div className="text-dim">
+                      {teamShort[0]} WP{" "}
+                      <span className="rating-num" style={{ color: "hsl(var(--primary))" }}>
+                        {p.wp}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="wp"
+              stroke="hsl(38, 92%, 55%)"
+              strokeWidth={1.75}
+              fill="url(#wpFill)"
+              isAnimationActive
+              animationDuration={800}
+              activeDot={{ r: 4, fill: "hsl(38, 92%, 55%)", stroke: "hsl(220, 15%, 6%)", strokeWidth: 2 }}
+            />
+            {dotPoints.map((d) => (
+              <ReferenceDot
+                key={d.idx}
+                x={d.idx}
+                y={d.wp}
+                r={4}
+                fill={d.type === "match_turning_point" ? "hsl(38, 92%, 55%)" : "hsla(340, 65%, 60%, 0.9)"}
+                stroke="hsl(220, 15%, 6%)"
+                strokeWidth={2}
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}

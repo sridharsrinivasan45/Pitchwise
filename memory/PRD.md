@@ -92,8 +92,7 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 
 ## Backlog (P0/P1)
 
-- P0 M2 Live Screen (Static): momentum chart, RatingBadge, ImpactBoard, MomentCard
-- P0 M3 Replay Ticker (SSE endpoint + frontend hook)
+- P0 M3 Replay Ticker (SSE endpoint + frontend hook to animate ratings/momentum ball-by-ball)
 - P0 M4 WhySheet + PitchAnimation (crown jewel)
 - P0 M7 Ask PitchWise + M5 Narrator (needs Emergent LLM key wired)
 - P1 M6 Historical Parallels (needs 5 more curated matches ingested)
@@ -105,8 +104,46 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 Auth, notifications, social layer, multi-league (BBL/PSL/WPL), video highlights, fantasy team
 builder, blog, settings, onboarding tour, dark-mode toggle.
 
-## Next Immediate Tasks (M2 kick-off, awaiting user green light)
+## Next Immediate Tasks (M3 kick-off, awaiting user green light)
 
-1. Build MomentumChart (Recharts area chart) + `RatingBadge` reusable
-2. ImpactBoard grid + MomentCard on Live page
-3. All static-only (no SSE yet) — reads current state from `/api/matches/{id}/state`
+1. SSE endpoint `GET /api/matches/{id}/stream?mode=replay&speed=3`
+2. `useMatchStream` React hook that consumes SSE and updates state ball-by-ball
+3. Wire momentum chart + impact board + narration to tick as balls arrive
+4. Play / Pause / Speed control chips
+
+## Milestones Completed
+
+### M2 — Live Screen (Static) (✔ verified 2026-07-02)
+
+**Backend tuning (placeholder engine only):**
+- Dampened rolling rating delta by 0.35 so ratings differentiate rather than saturate at 9.9
+- Boosted over-20 Rinku impact deltas and increased wicket penalties so the placeholder tells the right story
+- Rating breakdown component `weight` still records the raw contribution (unchanged) — only the trajectory scaling changed
+
+**Frontend components (all reusable):**
+- `lib/format.js` — over notation, delta formatting, rating tone, moment type labels
+- `components/rating/RatingBadge.jsx` — tappable rating tile with hot/warm/neutral tones, Framer animation on rating change, size variants sm/md/lg. This is the interaction backbone.
+- `components/rating/Sparkline.jsx` — pure-SVG inline sparkline with amber fill for rising trends
+- `components/live/MatchHeader.jsx` — teams, score, current over, Time Machine badge, venue
+- `components/live/NarrationLine.jsx` — animated one-line narration surface (static text in M2, AI in M5)
+- `components/live/MomentumChart.jsx` — full-width Recharts area chart of win probability with amber gradient, moment reference dots (amber for turning points, pink for boundary streaks), hover tooltip
+- `components/live/ImpactBoard.jsx` — 6-card grid with team+role chip, name, sparkline, RatingBadge; entrance stagger animation
+- `components/live/MomentCard.jsx` — moment type, over.ball, impact score, narrative, hot border for turning points
+
+**Live page:**
+- Loads featured match, full state, top 6 moments in parallel
+- Renders header → narration → momentum chart → impact board → moment strip (top moment + 3 also-decisive)
+- Loading, error, and empty states handled
+- Footer credits the "PitchWise impact engine · adapter v0.1 (placeholder)" — the abstraction is visible in the UI
+
+**Verified:**
+- Screenshot on external URL shows the WP curve rising from ~40% through 19 overs and *spiking vertically* in the 20th (5 amber dots for Rinku sixes)
+- Impact board: Rinku 9.9 with +0.74 delta (rising, amber-highlighted), Gurbaz 9.9 flat, Venkatesh 9.4, then decliners
+- Moment cards render with impact scores 8.7–8.8, all correctly attributed to the 20th over
+- Zero console errors on load
+- ESLint clean across all M2 files
+
+**Known M2 limitations (deferred, not blocking):**
+- Moment narratives are placeholder — 4 of the "also decisive" moments say near-identical text because the placeholder engine only differentiates on WP swing. Real engine + AI narrator (M5) will fix this.
+- Rating badge tap has `onExplain` prop wired but no handler yet — WhySheet ships in M4.
+- Momentum dots are not click-to-jump — that interaction ships with M3+M4.

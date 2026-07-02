@@ -1,0 +1,44 @@
+{
+  "iteration": 2,
+  "milestone": "M2 — Live Screen (Static)",
+  "date": "2026-07-02",
+  "scope": "Reusable rating primitives + Live page hero surface",
+  "backend": {
+    "changes": [
+      "Dampened rolling-rating delta by 0.35 in seed's _compute_ratings_snapshots to prevent saturation",
+      "Boosted over-20 Rinku impact deltas + increased wicket penalty for demo storytelling",
+      "Adapter interface UNCHANGED — engine boundary preserved"
+    ]
+  },
+  "frontend": {
+    "components_added": [
+      "lib/format.js",
+      "components/rating/RatingBadge.jsx",
+      "components/rating/Sparkline.jsx",
+      "components/live/MatchHeader.jsx",
+      "components/live/NarrationLine.jsx",
+      "components/live/MomentumChart.jsx",
+      "components/live/ImpactBoard.jsx",
+      "components/live/MomentCard.jsx"
+    ],
+    "pages_updated": ["pages/Live.jsx"],
+    "verified_via_screenshot": [
+      "Live: match header (KKR vs GT, Time Machine badge, KKR 206/6, KKR won by 3 wickets)",
+      "Live: narration line placeholder above the chart",
+      "Live: momentum chart with amber WP curve rising and spiking in the 20th over (5 amber ref dots for Rinku sixes + 2 pink boundary_streak dots earlier)",
+      "Live: impact board 6-card grid — Rinku 9.9 +0.74 (amber/rising), Gurbaz 9.9 flat, Venkatesh 9.4, Russell 7.7, Nitish 7.0, Mohit 6.7",
+      "Live: sparklines rendering per player (Rinku's short cameo sparkline visibly rising, others' longer sparklines showing trajectory)",
+      "Live: moment of the match card + 3 also-decisive moment cards, all with impact scores 8.7-8.8"
+    ],
+    "console_errors": 0,
+    "lint": "ESLint clean across all M2-authored files"
+  },
+  "known_limitations_intentional": [
+    "Moment narratives repetitive across the 5 Rinku sixes (placeholder engine)",
+    "RatingBadge tap wired but no WhySheet yet (M4)",
+    "Momentum dots not click-to-jump (M4)",
+    "Ratings still saturate at 9.9 for a couple players (placeholder)"
+  ],
+  "status": "pass",
+  "next_milestone": "M3 — Replay Ticker (SSE endpoint + useMatchStream hook + play/pause/speed controls)"
+}
