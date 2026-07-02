@@ -57,11 +57,20 @@ async def get_match(match_id: str) -> Optional[MatchSummary]:
 
 # ---------- Ball projection ----------
 
+def _ball_uid(b: dict) -> str:
+    """Synthesize the canonical ball_id used across snapshots/moments/UI.
+    The balls collection historically stores a legal_ball_num-based ball_uid
+    (e.g. `<m>-i2-109`), but the engine pipeline persists snapshots/moments
+    keyed by an over.ball format (e.g. `<m>-i2-o17.6`). The API surface must
+    speak the latter so WhySheet lookups match snapshot rows.
+    """
+    return f"{b['match_id']}-i{int(b['innings'])}-o{int(b['over'])}.{int(b['ball_in_over'])}"
+
+
 def _ball_doc_to_event(b: dict) -> BallEvent:
     """Project a raw Mongo balls doc into the BallEvent contract."""
-    # ball_id used by UI = the ball_uid engineered by ingest
     return BallEvent(
-        ball_id=b.get("ball_uid") or f"{b['match_id']}-i{b['innings']}-o{b['over']}.{b['ball_in_over']}",
+        ball_id=_ball_uid(b),
         match_id=b["match_id"],
         innings=int(b["innings"]),
         over=int(b["over"]),
@@ -119,7 +128,7 @@ async def get_match_state(match_id: str, at_ball: Optional[int] = None) -> Optio
     last = balls[-1]
     momentum = [
         MomentumPoint(
-            ball_id=b.get("ball_uid"),
+            ball_id=_ball_uid(b),
             over=int(b["over"]), ball=int(b["ball_in_over"]),
             wp=float(b.get("wp_after", 0.5)),
         ) for b in balls
@@ -178,7 +187,7 @@ async def get_match_state(match_id: str, at_ball: Optional[int] = None) -> Optio
         match_id=match_id,
         current_over=int(last["over"]),
         current_ball=int(last["ball_in_over"]),
-        latest_ball_id=last.get("ball_uid"),
+        latest_ball_id=_ball_uid(last),
         top_impact=top_impact, momentum=momentum, latest_moment=latest_moment,
     )
 
@@ -201,8 +210,13 @@ async def get_impact_board(match_id: str, at_ball_id: Optional[str] = None) -> l
 async def get_rating_breakdown(match_id: str, player_id: str, at_ball_id: Optional[str] = None) -> Optional[RatingBreakdown]:
     db = get_db()
     q = {"match_id": match_id, "player_id": player_id}
+    snap = None
     if at_ball_id:
         snap = await db.ratings_snapshots.find_one({**q, "after_ball_id": at_ball_id}, {"_id": 0})
+        if not snap:
+            # Fallback: latest snapshot for this player at or before the requested ball's match_seq.
+            # We don't know match_seq of an unknown ball_id → just return latest overall.
+            snap = await db.ratings_snapshots.find_one(q, {"_id": 0}, sort=[("match_seq", -1)])
     else:
         snap = await db.ratings_snapshots.find_one(q, {"_id": 0}, sort=[("match_seq", -1)])
     if not snap:

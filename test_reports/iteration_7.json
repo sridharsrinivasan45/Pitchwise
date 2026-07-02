@@ -1,0 +1,30 @@
+{
+  "summary": "Verified WhySheet 404 fix end-to-end. Backend: ball_id format is consistent ('<match>-i<inn>-o<over>.<ball>') in latest_ball_id and momentum. /api/ratings/{match}/{player} returns 200 with valid at_ball_id, without at_ball_id, and with nonsense at_ball_id (falls back to latest). Frontend: WhySheet opens with real content on both historical (1535465) and featured (1359487) matches — headlines populated, positives/negatives lists populated, NO 404 error banner.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "MomentCard (inside WhySheet 'The Moment that Mattered Most')", "issue": "Displays 'Over NaN.4' — the over number renders as NaN. Likely the moment object's over field is missing/null in the API response, so `${over}.${ball}` becomes 'NaN.4'.", "selector": "moment card headline text", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Live page charts", "issues": ["Console warnings: recharts container width/height = -1 on initial render (chart briefly has 0 dimensions). Cosmetic; charts render fine after mount."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_whysheet_fix.py", "/app/test_reports/pytest/iteration_7.xml"],
+  "action_items": [
+    "Fix 'Over NaN.4' in moment card — ensure Moment.over is populated (or default) in adapter.get_moments / MomentCard renderer",
+    "Optional: address recharts container -1 dimension warnings by setting minWidth/minHeight on ResponsiveContainer"
+  ],
+  "critical_code_review_comments": [
+    "adapter._ball_uid correctly synthesizes canonical id; both momentum and latest_ball_id use it — good.",
+    "get_rating_breakdown fallback (unknown at_ball_id -> latest snapshot) is implemented and works (verified with at_ball_id=xxxxx returning 200).",
+    "MomentumPoint ball_id also now uses _ball_uid — consistent."
+  ],
+  "updated_files": ["/app/backend/tests/test_whysheet_fix.py"],
+  "success_rate": {"backend": "100% (5/5 core tests; 1 test-assertion adjustment needed, not a product bug)", "frontend": "100% for WhySheet fix; 1 unrelated cosmetic bug (NaN over)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "WhySheet 404 fix verified fully. New minor issue: moment.over renders as NaN inside MomentCard shown in WhySheet — investigate Moment schema/adapter mapping if fixing.",
+  "rca of the issue": "Fixed already by main agent. Root cause: balls collection stored ball_uid as '<m>-i<inn>-<legal_num>' while ratings_snapshots/moments used '<m>-i<inn>-o<over>.<ball>'. Adapter now uniformly synthesizes the latter via _ball_uid() for BallEvent, MomentumPoint, and latest_ball_id; get_rating_breakdown falls back to latest snapshot on unknown ball_id."
+}
