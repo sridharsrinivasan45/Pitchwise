@@ -92,7 +92,7 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 
 ## Backlog (P0/P1)
 
-- P0 M3 Replay Ticker (SSE endpoint + frontend hook to animate ratings/momentum ball-by-ball)
+- P0 M4 WhySheet + PitchAnimation (crown jewel — clickable rating breakdown with per-ball evidence)
 - P0 M4 WhySheet + PitchAnimation (crown jewel)
 - P0 M7 Ask PitchWise + M5 Narrator (needs Emergent LLM key wired)
 - P1 M6 Historical Parallels (needs 5 more curated matches ingested)
@@ -104,12 +104,40 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 Auth, notifications, social layer, multi-league (BBL/PSL/WPL), video highlights, fantasy team
 builder, blog, settings, onboarding tour, dark-mode toggle.
 
-## Next Immediate Tasks (M3 kick-off, awaiting user green light)
+## Next Immediate Tasks (M4 kick-off, awaiting user green light)
 
-1. SSE endpoint `GET /api/matches/{id}/stream?mode=replay&speed=3`
-2. `useMatchStream` React hook that consumes SSE and updates state ball-by-ball
-3. Wire momentum chart + impact board + narration to tick as balls arrive
-4. Play / Pause / Speed control chips
+1. `GET /api/ratings/{match_id}/{player_id}?at_ball_id=xxx` — return the full RatingBreakdown from the adapter
+2. `WhySheet` component — slide-up sheet with base rating → component list → final rating → similar-innings placeholder
+3. `PitchAnimation` component — SVG pitch diagram, ball trajectory line, shot arc animated
+4. Wire RatingBadge onExplain to open WhySheet with the correct player + current at_ball_id
+5. Wire momentum chart moment dots to open the WhySheet for that ball's key player
+
+## Milestones Completed
+
+### M3 — Replay Ticker (SSE) (✔ verified 2026-07-02)
+
+**Backend (adapter interface UNCHANGED):**
+- New route `routes/stream.py` mounted at `GET /api/matches/{match_id}/stream?from_ball=0&speed=1&mode=replay`
+- Server-Sent Events: emits `meta` event with total_balls at connection, then one `tick` event per ball at cadence `0.9s / speed`, then an `end` event
+- Each tick payload: `{seq, total, ball, state:{current_over,current_ball,latest_ball_id,top_impact,momentum,latest_moment}, narration}`
+- Static narration rules (`_narration_for`) — event-based lines placeholder until M5 AI narrator takes over
+- Client disconnect honored via `Request.is_disconnected()`
+- SSE headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no`, `Connection: keep-alive`
+
+**Frontend:**
+- `hooks/useMatchStream.js` — EventSource wrapper with clean lifecycle:
+  - Auto-plays on mount, streams incrementally, closes on unmount
+  - `play` / `pause` / `setSpeed` / `restart` / `seekToBall` API
+  - Speed change reopens the stream from the current cursor (seamless)
+- `components/live/ReplayControls.jsx` — big amber play/pause button, replaying/paused/complete status, ball N/M counter, over.ball display, animated progress ribbon, speed chips (0.5×/1×/2×/4×), "Skip to the finish" button (jumps to ball 108 = start of over 19)
+- `MomentumChart` — added `live` prop; when live, a pulsing amber "live head" reference dot marks the current ball tip
+- `ImpactBoard` — added `layout` + `AnimatePresence` for spring reorder when ratings swap; "ON STRIKE" chip + amber outline on the batter facing the current ball
+
+**Verified via screenshots:**
+- Mid-innings replay: Over 6.3, Venkatesh on strike with amber outline, curve extending, live-head pulse at tip, controls showing "REPLAYING · Ball 33/119"
+- Death-over replay at 2×: Over 20.4, narration "SIX at O20.4. Rinku is rewriting this over — pressure 9.9", 4 amber dots on chart, Rinku at 9.2 +0.77 with ON STRIKE badge
+- Completed state: Ball 119/119, control switches to restart icon, Rinku *reordered* from #3 → #1 (Framer layout animation), all 5 death-over amber dots visible
+- Zero console errors; ESLint clean across `hooks/`, `components/live/`, `pages/`
 
 ## Milestones Completed
 

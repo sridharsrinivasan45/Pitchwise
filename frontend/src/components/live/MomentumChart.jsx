@@ -8,7 +8,7 @@ import {
  * Full width, ~280px tall. Dots on flagged moments.
  * Non-interactive in M2 (no on-click); tap-jump wires in M3+.
  */
-export default function MomentumChart({ momentum = [], moments = [], teamShort = [] }) {
+export default function MomentumChart({ momentum = [], moments = [], teamShort = [], live = false }) {
   if (!momentum.length) {
     return (
       <div className="h-[280px] w-full rounded-lg border border-border/50 bg-card/40 flex items-center justify-center text-dim text-sm">
@@ -31,6 +31,9 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
       return { idx: i, wp: Math.round(m.wp * 100), type: mm.type };
     })
     .filter(Boolean);
+
+  const lastIdx = data.length - 1;
+  const lastWp = data[lastIdx]?.wp;
 
   return (
     <div className="w-full" data-testid="momentum-chart">
@@ -85,8 +88,8 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
               stroke="hsl(38, 92%, 55%)"
               strokeWidth={1.75}
               fill="url(#wpFill)"
-              isAnimationActive
-              animationDuration={800}
+              isAnimationActive={!live}
+              animationDuration={live ? 200 : 800}
               activeDot={{ r: 4, fill: "hsl(38, 92%, 55%)", stroke: "hsl(220, 15%, 6%)", strokeWidth: 2 }}
             />
             {dotPoints.map((d) => (
@@ -100,6 +103,26 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
                 strokeWidth={2}
               />
             ))}
+            {live && lastWp != null && (
+              <ReferenceDot
+                x={lastIdx}
+                y={lastWp}
+                r={6}
+                fill="hsl(38, 92%, 55%)"
+                stroke="hsl(220, 15%, 6%)"
+                strokeWidth={2}
+                isFront
+                shape={(props) => (
+                  <g>
+                    <circle cx={props.cx} cy={props.cy} r={11} fill="hsla(38, 92%, 55%, 0.25)">
+                      <animate attributeName="r" values="7;14;7" dur="1.4s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.6;0;0.6" dur="1.4s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx={props.cx} cy={props.cy} r={5} fill="hsl(38, 92%, 55%)" stroke="hsl(220, 15%, 6%)" strokeWidth={2} />
+                  </g>
+                )}
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>

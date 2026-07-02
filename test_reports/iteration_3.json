@@ -1,0 +1,43 @@
+{
+  "iteration": 3,
+  "milestone": "M3 — Replay Ticker (SSE)",
+  "date": "2026-07-02",
+  "scope": "Cinematic ball-by-ball replay with play/pause/speed",
+  "backend": {
+    "added": [
+      "routes/stream.py — SSE endpoint GET /api/matches/{id}/stream",
+      "Emits meta / tick(per-ball) / end events",
+      "Server-side pacing via asyncio.sleep (0.9s / speed base cadence)",
+      "Client disconnect handled via Request.is_disconnected()"
+    ],
+    "adapter_interface": "UNCHANGED (still v0.1 placeholder)",
+    "verified_via_curl": "speed=10 stream from ball 115 produced meta + 5 tick events + end; narration cricket-fluent per ball"
+  },
+  "frontend": {
+    "added": [
+      "hooks/useMatchStream.js — EventSource wrapper (play/pause/setSpeed/restart/seekToBall)",
+      "components/live/ReplayControls.jsx — big play button, progress ribbon, speed chips, skip-to-finish"
+    ],
+    "updated": [
+      "components/live/MomentumChart.jsx — pulsing amber live-head reference dot when live=true",
+      "components/live/ImpactBoard.jsx — Framer layout + AnimatePresence for spring reorder; ON STRIKE chip",
+      "pages/Live.jsx — consumes useMatchStream, autoPlays on mount, wires all controls"
+    ],
+    "verified_via_screenshot": [
+      "Mid-innings: Over 6.3, Venkatesh Iyer on strike with amber outline, live-head pulse at chart tip",
+      "Death-over replay at 2x: narration updated per six, 4 amber ref dots placed, Rinku 9.2 +0.77 with ON STRIKE",
+      "Completed state: restart icon shown, Rinku reordered from #3 to #1 via layout animation, all 5 death-over dots visible"
+    ],
+    "console_errors": 0,
+    "lint": "ESLint clean"
+  },
+  "product_principles_verified": {
+    "cinematic_not_scoreboard": "PASS — spring layout reorder, live-head pulse, framer rating animations",
+    "story_visually_obvious": "PASS — momentum shape communicates match without a word",
+    "smooth_premium_never_distracting": "PASS — spring 260/26 damping, opacity+transform only",
+    "rating_updates_reinforce_trust": "PASS — every tick shows batter delta, sparkline extends, ON STRIKE chip signals attribution",
+    "placeholder_engine_unchanged": "PASS — adapter interface identical"
+  },
+  "status": "pass",
+  "next_milestone": "M4 — WhySheet + PitchAnimation (crown jewel)"
+}
