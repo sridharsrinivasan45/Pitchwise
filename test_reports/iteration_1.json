@@ -1,0 +1,30 @@
+{
+  "iteration": 1,
+  "milestone": "M0 + M1",
+  "date": "2026-07-02",
+  "scope": "Skeleton + Data Foundation",
+  "backend": {
+    "endpoints_verified_via_curl": [
+      "GET /api/health -> 200 {status:ok}",
+      "GET /api/matches?featured=true -> 1 match (Rinku's 5 Sixes)",
+      "GET /api/matches/kkr-gt-2023-04-09 -> full summary, score KKR 206/6, 119 balls",
+      "GET /api/matches/kkr-gt-2023-04-09/state -> 119 momentum points, 6 top-impact rows",
+      "GET /api/matches/kkr-gt-2023-04-09/moments?top_n=3 -> Rinku sixes ranked highest",
+      "GET /api/matches/kkr-gt-2023-04-09/impact-board -> Rinku 9.9, Gurbaz 9.9, Nitish 8.6"
+    ],
+    "seed": {
+      "match_id": "kkr-gt-2023-04-09",
+      "balls": 119,
+      "ratings_snapshots": 238,
+      "moments": 10,
+      "final_score": 206
+    }
+  },
+  "frontend": {
+    "routes_verified_via_screenshot": ["/", "/time-machine", "/about"],
+    "visuals": "Dark theme with amber accent, Fraunces editorial headings, JetBrains Mono numerics, glassmorphic top nav. Featured Rinku's 5 Sixes card loads from real API."
+  },
+  "issues": [],
+  "status": "pass",
+  "next_milestone": "M2 — Live Screen (Static): MomentumChart, RatingBadge, ImpactBoard, MomentCard"
+}

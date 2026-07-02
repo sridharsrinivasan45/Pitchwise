@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* PitchWise dark palette — cricket-under-lights */
+    --background: 220 15% 6%;
+    --foreground: 40 30% 96%;
+    --card: 220 14% 9%;
+    --card-foreground: 40 30% 96%;
+    --popover: 220 14% 9%;
+    --popover-foreground: 40 30% 96%;
+    --primary: 38 92% 55%;         /* amber accent */
+    --primary-foreground: 220 15% 6%;
+    --secondary: 220 10% 14%;
+    --secondary-foreground: 40 30% 96%;
+    --muted: 220 10% 14%;
+    --muted-foreground: 220 8% 60%;
+    --accent: 38 92% 55%;
+    --accent-foreground: 220 15% 6%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 40 30% 96%;
+    --border: 220 10% 16%;
+    --input: 220 10% 16%;
+    --ring: 38 92% 55%;
+    --chart-1: 38 92% 55%;
+    --chart-2: 173 55% 55%;
+    --chart-3: 340 65% 60%;
+    --chart-4: 200 70% 55%;
+    --chart-5: 45 90% 65%;
+    --radius: 0.6rem;
+
+    /* semantic */
+    --positive: 155 55% 55%;
+    --negative: 0 72% 60%;
+    --dim: 220 8% 45%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  html, body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+  }
+
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  h1, h2, h3, .font-editorial {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+
+  .font-mono, .rating-num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+  }
+
+  /* Subtle grain overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+}
+
+@layer utilities {
+  .text-positive { color: hsl(var(--positive)); }
+  .text-negative { color: hsl(var(--negative)); }
+  .text-dim { color: hsl(var(--dim)); }
+  .bg-positive-soft { background: hsla(155, 55%, 55%, 0.12); }
+  .bg-negative-soft { background: hsla(0, 72%, 60%, 0.12); }
+  .bg-amber-soft { background: hsla(38, 92%, 55%, 0.12); }
+  .border-amber-soft { border-color: hsla(38, 92%, 55%, 0.35); }
+  .glass {
+    background: hsla(220, 14%, 10%, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .divider-soft { border-color: hsla(40, 20%, 90%, 0.08); }
+}
+
+@layer base {
+  [data-debug-wrapper="true"] { display: contents !important; }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit; margin-right: inherit; margin-top: inherit; margin-bottom: inherit;
+    padding-left: inherit; padding-right: inherit; padding-top: inherit; padding-bottom: inherit;
+    column-gap: inherit; row-gap: inherit; gap: inherit;
+    border-left-width: inherit; border-right-width: inherit; border-top-width: inherit; border-bottom-width: inherit;
+    border-left-style: inherit; border-right-style: inherit; border-top-style: inherit; border-bottom-style: inherit;
+    border-left-color: inherit; border-right-color: inherit; border-top-color: inherit; border-bottom-color: inherit;
+  }
+}
