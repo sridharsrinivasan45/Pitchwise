@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { fetchMatches, fetchMatch, fetchMoments } from "@/lib/api";
+import { Link, useSearchParams } from "react-router-dom";
+import { fetchMatches, fetchMatch, fetchMoments, fetchSkipToDeath } from "@/lib/api";
 import MatchHeader from "@/components/live/MatchHeader";
 import NarrationLine from "@/components/live/NarrationLine";
 import MomentumChart from "@/components/live/MomentumChart";
@@ -153,7 +153,7 @@ export default function Live() {
           onPause={pause}
           onSetSpeed={setSpeed}
           onRestart={restart}
-          onSkipToDeath={() => seekToBall(SKIP_TO_DEATH_BALL)}
+          onSkipToDeath={() => seekToBall(skipTarget)}
         />
       </div>
 

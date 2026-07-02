@@ -13,9 +13,30 @@ export async function fetchHealth() {
   return data;
 }
 
-export async function fetchMatches({ featured = false } = {}) {
-  const { data } = await api.get(`/matches`, { params: { featured } });
-  return data.matches;
+export async function fetchMatches({ featured = false, search = "", season = "", team = "", sort = "newest", limit = 50, offset = 0 } = {}) {
+  const params = { featured, search, season, team, sort, limit, offset };
+  const { data } = await api.get(`/matches`, { params });
+  return data;
+}
+
+export async function fetchMatchFacets() {
+  const { data } = await api.get(`/matches/facets`);
+  return data;
+}
+
+export async function fetchPlayers({ search = "", team = "", role = "", sort = "rating", limit = 60, offset = 0 } = {}) {
+  const { data } = await api.get(`/players`, { params: { search, team, role, sort, limit, offset } });
+  return data;
+}
+
+export async function fetchPlayerProfile(playerId) {
+  const { data } = await api.get(`/players/${playerId}`);
+  return data;
+}
+
+export async function fetchSkipToDeath(matchId) {
+  const { data } = await api.get(`/matches/${matchId}/skip-to-death`);
+  return data;
 }
 
 export async function fetchMatch(matchId) {
