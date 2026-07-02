@@ -161,7 +161,8 @@ def _plot_calibration(calibration_rows: list[dict], out_png: Path):
     fig, ax = plt.subplots(figsize=(6, 6), dpi=140)
     ax.plot([0, 1], [0, 1], "--", color="#888", linewidth=1, label="Perfectly calibrated")
     ax.plot(pred, actual, "-o", color="#F5A623", linewidth=2, markersize=6, label="PitchWise WP model")
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
     ax.set_xlabel("Predicted P(win)")
     ax.set_ylabel("Actual win rate")
     ax.set_title("Win-probability calibration (held-out matches)")
@@ -281,7 +282,6 @@ def main():
     p.add_argument("--dry-run", action="store_true", help="Build events.parquet without training")
     args = p.parse_args()
     asyncio.run(_run(exclude_tied=not args.include_tied, dry_run=args.dry_run))
-
 
 if __name__ == "__main__":
     main()

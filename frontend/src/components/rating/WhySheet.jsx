@@ -178,16 +178,18 @@ export default function WhySheet({ open, onClose, matchId, playerId, atBallId, s
     const pos = [...cs].filter((c) => c.weight > 0).sort((a, b) => b.weight - a.weight);
     const neg = [...cs].filter((c) => c.weight < 0).sort((a, b) => a.weight - b.weight);
     const biggest = pos[0] || null;
-    // Rating evolution: running rating after each component with the same 0.35 scaling as placeholder engine
-    let running = breakdown?.base_rating ?? 6.0;
+    // Rating evolution: running rating derived from cumulative component weights,
+    // starting at base_rating. Weights are already in rating-delta space (from adapter).
+    let running = breakdown?.base_rating ?? 5.0;
     const evo = [running];
     cs.forEach((c) => {
-      running = Math.max(1.0, Math.min(9.9, running + c.weight * 0.35));
+      running = Math.max(1.0, Math.min(9.9, running + c.weight));
       evo.push(running);
     });
-    // Counterfactual: remove the biggest contribution's scaled effect
-    const scaled = biggest ? biggest.weight * 0.35 : 0;
-    const alt = Math.max(1.0, Math.min(9.9, (breakdown?.final_rating ?? 0) - scaled));
+    // Counterfactual: remove the biggest contribution from the final rating.
+    const alt = biggest
+      ? Math.max(1.0, Math.min(9.9, (breakdown?.final_rating ?? 0) - biggest.weight))
+      : (breakdown?.final_rating ?? 0);
     return {
       positives: pos, negatives: neg, biggestPositive: biggest,
       evolutionValues: evo, counterfactualRating: alt,
@@ -326,7 +328,7 @@ export default function WhySheet({ open, onClose, matchId, playerId, atBallId, s
                         </div>
                       </div>
                       {/* Counterfactual */}
-                      {Math.abs(biggestPositive.weight * 0.35) > 0.1 && (
+                      {Math.abs(biggestPositive.weight) > 0.15 && (
                         <p className="mt-3 text-xs text-muted-foreground leading-snug" data-testid="why-counterfactual">
                           Without this one delivery,{" "}
                           <span className="text-foreground">{breakdown.player_name}</span>{" "}

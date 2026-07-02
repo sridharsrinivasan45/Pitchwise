@@ -14,7 +14,7 @@ import useMatchStream from "@/hooks/useMatchStream";
  * Live page — cinematic replay of a match, ball-by-ball.
  * SSE-powered: state ticks per delivery, ratings animate, momentum extends.
  */
-const SKIP_TO_DEATH_BALL = 108; // ~ start of over 19 (0-indexed): 18*6
+const SKIP_TO_DEATH_BALL = 244; // start of over 20 in KKR's chase (innings 2, Rinku match); dynamic per-match handling comes with Stage 5
 
 export default function Live() {
   const [match, setMatch] = useState(null);

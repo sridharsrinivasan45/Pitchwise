@@ -92,7 +92,7 @@ M8 Time Machine Grid · M9 Player Profile · M10 Innings DNA Card · M11 About +
 
 ## Backlog (P0/P1)
 
-- **NEXT: Engine integration** — swap placeholder engine for real Python analytics engine via adapter
+- **NEXT: Stage 5 validation** — screenshot-and-verify all four surfaces (Live, Replay, Momentum, Impact Board, WhySheet) against the real engine end-to-end
 - P0 M4 WhySheet + PitchAnimation (crown jewel)
 - P0 M7 Ask PitchWise + M5 Narrator (needs Emergent LLM key wired)
 - P1 M6 Historical Parallels (needs 5 more curated matches ingested)

@@ -1,0 +1,73 @@
+{
+  "iteration": 5,
+  "milestone": "Stage 4 — Real engine integration via thin adapter",
+  "date": "2026-07-02",
+  "scope": "Wire uploaded PitchWise engine + trained WP model into the product without changing the frontend",
+  "engine_methodology_status": "UNCHANGED — every constant, formula, and hyperparameter preserved",
+  "backend_added": [
+    "engine/core/{wpa_engine.py, ratings_from_wpa.py, win_probability_model.py, ipl_ratings.py} — vendored verbatim",
+    "engine/pipeline.py — materializer that runs engine functions on ingested data and persists WPA/ratings/moments/snapshots",
+    "data/team_aliases.py — display-only aliases (Delhi Daredevils→Delhi Capitals, Kings XI Punjab→Punjab Kings, RCB Bangalore→Bengaluru, etc.); NOT applied to engine data"
+  ],
+  "backend_rewired": [
+    "engine/adapter.py — pure Mongo reads projected into contracts; no analytics logic",
+    "  * list_matches / get_match: read matches with team aliases applied to display only",
+    "  * stream_balls / get_ball_by_id: project balls docs, ball_id=ball_uid",
+    "  * get_match_state: momentum from balls.wp_after, top_impact from ratings_snapshots aggregation, team resolved AT MATCH TIME via balls.batting/bowling_team",
+    "  * get_moments: read moments collection (materialized by pipeline)",
+    "  * get_rating_breakdown: collect all snapshot components for player up to match_seq"
+  ],
+  "frontend_changes": [
+    "components/rating/WhySheet.jsx — 2 one-line adjustments: removed placeholder 0.35 scaling from evolution/counterfactual math (weights now arrive in rating-delta space from adapter); threshold guard changed accordingly",
+    "pages/Live.jsx — SKIP_TO_DEATH_BALL updated from 108 → 244 (start of KKR over 20; total balls per match is now 250 across both innings, not 120)"
+  ],
+  "materialization_run": {
+    "matches_processed": 1243,
+    "wpa_rows_persisted": 295557,
+    "match_ratings_rows": 26703,
+    "snapshots_rows": 591114,
+    "moments_rows": "≤ 14916 (top 12 per match)",
+    "pipeline_seconds": 272,
+    "name_fallback_snapshots": 113,
+    "name_fallback_percent": 0.019
+  },
+  "rinku_end_to_end_verified": {
+    "match_id": "1359487",
+    "featured": true,
+    "curation_title": "Rinku's 5 Sixes",
+    "top_impact_at_final_ball": [
+      "RK Singh   KKR 10.00 Δ+4.37",
+      "VR Iyer    KKR  9.94 Δ-0.05",
+      "Rashid Khan GT  9.54 Δ+0.00",
+      "AS Joseph  GT   9.50 Δ-0.09",
+      "B Sai Sudharsan GT 9.25 Δ+0.01",
+      "Shubman Gill GT  8.80 Δ-0.36"
+    ],
+    "rk_singh_hex_id": "0a509d6b",
+    "rk_singh_components": 23,
+    "biggest_positive_weight": 4.370,
+    "final_rating": 10.0
+  },
+  "verified_via_screenshot": [
+    "Live page mid-replay (Over 3.4, ball 143/250) — impact board shows CORRECT match-time teams (all GT batters + KKR bowlers)",
+    "Momentum chart displays both innings continuously with amber live-head pulse"
+  ],
+  "known_deferrals_for_stage_5": [
+    "Momentum chart could show a visible innings boundary marker (currently continuous)",
+    "Curation UX — 'Skip to finish' currently hardcodes 244 for the Rinku match; needs per-match resolver in Stage 5",
+    "V Shankar and other players with name-suffix disambiguation ('Arshad Khan (2)') fall back to name: player_ids (113/591114 = 0.02%)"
+  ],
+  "adapter_purity_check": {
+    "analytics_functions_called_by_adapter": "NONE — adapter only reads Mongo",
+    "engine_functions_called_by_pipeline": [
+      "engine.core.wpa_engine.add_wpa_first_innings",
+      "engine.core.wpa_engine.add_wpa_second_innings",
+      "engine.core.wpa_engine.compute_opposition_adjustment",
+      "engine.core.ratings_from_wpa.build_match_ratings",
+      "engine.core.ratings_from_wpa.wpa_to_rating (running snapshots — applying engine's own function per ball)"
+    ]
+  },
+  "lint": "clean across data/, engine/adapter.py, engine/pipeline.py, routes/ (engine/core/* not touched per directive)",
+  "status": "pass",
+  "next_stage": "Stage 5 — validate every completed feature (Live, Replay, Momentum, Impact Board, WhySheet) end-to-end using the real engine and produce a final visual pass"
+}

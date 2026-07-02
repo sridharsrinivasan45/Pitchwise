@@ -390,7 +390,7 @@ async def ingest(
     async for m in db.matches.find({}, {"_id": 0, "match_id": 1, "source_hash": 1}):
         known[m["match_id"]] = m.get("source_hash") or ""
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory():
         with zipfile.ZipFile(archive_path, "r") as zf:
             names = [n for n in zf.namelist() if n.endswith(".json") and not n.endswith("/README.txt")]
             names.sort()  # deterministic order
