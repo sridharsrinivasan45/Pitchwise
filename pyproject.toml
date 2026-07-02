@@ -1,0 +1,7 @@
+[tool.ruff]
+# The proprietary analytics engine under backend/engine/core/ is user-provided
+# and must NOT be modified (per handoff instructions). Exclude it from linting.
+extend-exclude = [
+    "backend/engine/core",
+]
+force-exclude = true

@@ -218,3 +218,36 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
 - Moment narratives are placeholder — 4 of the "also decisive" moments say near-identical text because the placeholder engine only differentiates on WP swing. Real engine + AI narrator (M5) will fix this.
 - Rating badge tap has `onExplain` prop wired but no handler yet — WhySheet ships in M4.
 - Momentum dots are not click-to-jump — that interaction ships with M3+M4.
+
+
+---
+
+## Session 2026-02 — Product-experience polish (before Milestone 5)
+
+### Fix 1: Historical matches now open in Live (P0)
+- Root cause: `Live.jsx` ignored the `?match_id=` query param — always fetched the featured match. Fallback was also broken: `if (!featured.length)` was checking `.length` on an object `{matches, total}`, so it always short-circuited.
+- Also: `skipTarget` variable was referenced but never defined; the Skip-to-finish button used a hardcoded ball index (244) specific to the Rinku match.
+- Fix: `Live.jsx` now reads `useSearchParams()`, loads the requested match, falls back to featured only when no query param is present, and computes `skipTarget` dynamically via `GET /api/matches/{id}/skip-to-death`. `ReplayControls` conditionally renders the Skip button.
+- Verified by testing_agent iteration_6 across 4 distinct matches (featured + 3 historical) + Time Machine navigation.
+
+### Fix 2: WhySheet 404 on rating clicks (P0, surfaced during Fix 1 verification)
+- Root cause: `balls.ball_uid` was ingested as `<m>-i<inn>-<legal_num>` (e.g. `1535465-i2-109`), but `ratings_snapshots.after_ball_id` and `moments.ball_id` were written by the engine pipeline in `<m>-i<inn>-o<over>.<ball>` format. The adapter surfaced the balls-collection format as `latest_ball_id`, so WhySheet's snapshot lookup never matched.
+- Fix (adapter-only, no engine change): added `_ball_uid(b)` that synthesizes the canonical over.ball format. `_ball_doc_to_event`, `momentum` points, and `latest_ball_id` all use it. Also added a graceful fallback in `get_rating_breakdown`: unknown `at_ball_id` now falls back to the latest snapshot for that player instead of 404.
+- Follow-up cosmetic: `ballOverParts` in `WhySheet.jsx` now strips the `"o"` prefix so "Over 3.4" renders (previously "Over NaN.4").
+- Verified by testing_agent iteration_7 (backend + frontend) and self-screenshot: "Boundary at Over 1.3", rating badge 1.4, positives/negatives populated.
+
+### Report 2: Career rating calibration diagnosis (no code change)
+- Kohli's career rating showed 4.85 and Bumrah's 5.68 — the user flagged this as failing a sanity check.
+- Root cause diagnosed: **product-layer aggregation**, not engine methodology. We compute `mean(overall_rating)` across matches, but `overall_rating = 5 + 5*tanh(match_total_wpa / 0.15)` is nonlinear + bounded. Averaging bounded/saturating quantities is classic Jensen collapse toward 5. Compounded by WPA being roughly zero-sum within a match.
+- The engine already provides the correct aggregation shape: `build_season_ratings()` — average WPA first, shrink by `n/(n+k)`, then apply `wpa_to_rating(..., scale=0.05)`.
+- Applying that same aggregator to full career (not just a season) yields **Kohli 6.6, Bumrah 8.5** — passes intuitive sanity check.
+- **No code changed yet** — full diagnosis in `/app/memory/CAREER_RATING_DIAGNOSIS.md`. Awaiting user approval before applying the fix in `routes/players.py`.
+
+### Still up next
+- ✅ Historical matches load in Live (verified)
+- ✅ WhySheet works on any match (verified)
+- ⏳ Career rating aggregation fix (approval pending; diagnosis complete)
+- ⏳ Momentum chart innings-break vertical divider (P1 polish, not started)
+- 🔴 Milestone 5: AI Narrator (Claude Sonnet 4.5 via Emergent LLM key) — next once above two are approved
+- 🟠 Ask PitchWise (Cmd+K Analyst)
+- 🔵 Historical Parallels, Innings DNA share card

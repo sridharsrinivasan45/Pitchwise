@@ -1,6 +1,0 @@
-# Ruff configuration for PitchWise backend.
-# The proprietary analytics engine under engine/core/ is user-provided and
-# must NOT be modified (per handoff instructions). Exclude it from linting.
-extend-exclude = [
-    "engine/core",
-]

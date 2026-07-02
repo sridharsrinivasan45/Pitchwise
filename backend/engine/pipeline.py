@@ -32,7 +32,6 @@ sys.path.insert(0, str(BACKEND))
 from dotenv import load_dotenv  # noqa: E402
 load_dotenv(BACKEND / ".env")
 
-import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from core.db import get_db  # noqa: E402
 from engine.core.wpa_engine import (  # noqa: E402
@@ -180,7 +179,6 @@ async def _persist_snapshots_and_moments(wpa: pd.DataFrame):
     own wpa_to_rating function to per-player cumulative WPA — not redefining it.
     """
     db = get_db()
-    from pymongo import UpdateOne
 
     # ─── SNAPSHOTS ─────────────────────────────────────────────
     # For each (match_id, player), a running snapshot per ball they were involved in.

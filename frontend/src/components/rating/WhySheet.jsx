@@ -106,11 +106,12 @@ function buildHeadline(breakdown) {
 }
 
 function ballOverParts(component) {
-  // Extract over.ball from ball_id like "kkr-gt-2023-04-09-i2-19.4"
+  // Extract over.ball from ball_id like "1535465-i1-o3.4" or legacy "match-2023-i2-19.4"
   if (!component?.ball_id) return [null, null];
-  const seg = component.ball_id.split("-").pop(); // "19.4"
-  const [o, b] = seg.split(".").map((n) => parseInt(n, 10));
-  return [o, b];
+  const seg = component.ball_id.split("-").pop(); // "o3.4" or "19.4"
+  const cleaned = seg.startsWith("o") ? seg.slice(1) : seg;
+  const [o, b] = cleaned.split(".").map((n) => parseInt(n, 10));
+  return [Number.isNaN(o) ? null : o, Number.isNaN(b) ? null : b];
 }
 
 // ---------- Small building blocks ----------
