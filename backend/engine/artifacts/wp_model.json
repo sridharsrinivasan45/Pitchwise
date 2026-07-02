@@ -1,0 +1,57 @@
+{
+  "auc": 0.8662,
+  "brier_score": 0.1491,
+  "n_train_matches": 974,
+  "n_test_matches": 244,
+  "n_train_balls": 111307,
+  "n_test_balls": 28110,
+  "calibration": [
+    {
+      "predicted": 0.0256,
+      "actual": 0.0299
+    },
+    {
+      "predicted": 0.1062,
+      "actual": 0.1075
+    },
+    {
+      "predicted": 0.2159,
+      "actual": 0.2021
+    },
+    {
+      "predicted": 0.3312,
+      "actual": 0.367
+    },
+    {
+      "predicted": 0.4518,
+      "actual": 0.4877
+    },
+    {
+      "predicted": 0.5681,
+      "actual": 0.5631
+    },
+    {
+      "predicted": 0.6927,
+      "actual": 0.6516
+    },
+    {
+      "predicted": 0.8207,
+      "actual": 0.834
+    },
+    {
+      "predicted": 0.9221,
+      "actual": 0.899
+    },
+    {
+      "predicted": 0.9727,
+      "actual": 0.9772
+    }
+  ],
+  "feature_importance": {
+    "runs_needed": 0.0815,
+    "balls_remaining": 0.0023,
+    "wickets_in_hand": 0.0553,
+    "required_rpb": 0.7382,
+    "target_size": 0.1226
+  }
+}

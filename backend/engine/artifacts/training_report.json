@@ -1,0 +1,82 @@
+{
+  "run_at": "2026-07-02T17:33:34.047077+00:00",
+  "engine_source": "engine.core.win_probability_model.train_and_validate",
+  "methodology_status": "UNCHANGED",
+  "matches_included": 1218,
+  "matches_excluded": 25,
+  "exclusion_reasons": {
+    "tie": 16,
+    "no_result": 9
+  },
+  "total_balls_loaded": 290752,
+  "class_balance": {
+    "second_innings_balls": 140282,
+    "chase_won_fraction": 0.5254,
+    "chase_lost_fraction": 0.4746
+  },
+  "auc": 0.8662,
+  "brier_score": 0.1491,
+  "n_train_matches": 974,
+  "n_test_matches": 244,
+  "n_train_balls": 111307,
+  "n_test_balls": 28110,
+  "feature_importance": {
+    "runs_needed": 0.0815,
+    "balls_remaining": 0.0023,
+    "wickets_in_hand": 0.0553,
+    "required_rpb": 0.7382,
+    "target_size": 0.1226
+  },
+  "calibration": [
+    {
+      "predicted": 0.0256,
+      "actual": 0.0299
+    },
+    {
+      "predicted": 0.1062,
+      "actual": 0.1075
+    },
+    {
+      "predicted": 0.2159,
+      "actual": 0.2021
+    },
+    {
+      "predicted": 0.3312,
+      "actual": 0.367
+    },
+    {
+      "predicted": 0.4518,
+      "actual": 0.4877
+    },
+    {
+      "predicted": 0.5681,
+      "actual": 0.5631
+    },
+    {
+      "predicted": 0.6927,
+      "actual": 0.6516
+    },
+    {
+      "predicted": 0.8207,
+      "actual": 0.834
+    },
+    {
+      "predicted": 0.9221,
+      "actual": 0.899
+    },
+    {
+      "predicted": 0.9727,
+      "actual": 0.9772
+    }
+  ],
+  "data_quality_warnings": [],
+  "artifacts": {
+    "wp_model_pkl": "/app/backend/engine/artifacts/wp_model.pkl",
+    "wp_model_metadata_json": "/app/backend/engine/artifacts/wp_model.json",
+    "feature_importance_json": "/app/backend/engine/artifacts/feature_importance.json",
+    "calibration_csv": "/app/backend/engine/artifacts/calibration.csv",
+    "calibration_png": "/app/backend/engine/artifacts/calibration.png",
+    "events_parquet": "/app/backend/engine/artifacts/events.parquet"
+  },
+  "seconds": 11.43
+}
