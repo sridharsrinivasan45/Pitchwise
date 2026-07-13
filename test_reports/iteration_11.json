@@ -1,0 +1,51 @@
+{
+  "summary": "UX polish pass verified across all 10 items + regressions. 9/10 polish items PASS. P8 RatingBadge fixed-width FAILS: '9.5' badges measure 48.77px vs '10.0' badges 59.69px (10.92px jump between single/double-digit ratings) — the min-w-[44px] (sm) / min-w-[68px] (md) values are too small to prevent growth for 4-char '10.0'. All 3 P0s (mobile bottom nav, verdict skeleton, empty-state balance) PASS. All regressions PASS.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "RatingBadge", "issue": "Fixed-width polish incomplete. '9.5' cell = 48.77px, '10.0' cell = 59.69px on /players (sm size); double-digit ratings widen the badge because content width exceeds min-w. Should bump min-w-[44px]→~64px (sm) and min-w-[68px]→~88px (md) so 4-char values ('10.0', '-0.1') still fit within min-width.", "selector": "[data-testid^=player-rating-]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Players grid / PlayerProfile best performances", "issues": ["Nested-button hydration warning: RatingBadge (button) rendered inside player-card (button). Pre-existing invalid HTML — accessibility & hydration risk."]},
+      {"screen": "Live (initial paint)", "issues": ["Recharts width(-1)/height(-1) warnings on first render — pre-existing cosmetic warn from iter 9-10."]}
+    ]
+  },
+  "polish_checklist": {
+    "P1_mobile_bottom_nav": "PASS — bottom-nav visible at 390x844 with 4 links, all navigate correctly; hidden at 1440x900; top-nav hidden on mobile.",
+    "P2_verdict_skeleton": "PASS — match-explanation-loading present at t=300ms with aria-busy=true and animated skeleton bars; resolves to match-explanation; no 'Reading the engine…' text found.",
+    "P3_empty_state_variants": "PASS — clean state: only browse-time-machine card, centered on 1440 (center_x=720.0 = viewport center). After visiting /?match_id=1359487, both continue-last-match and browse-time-machine render.",
+    "P4_match_header_mobile": "PASS — no horizontal overflow at 390x844 (scrollWidth=clientWidth=390).",
+    "P5_time_machine_filters": "PASS — filters block present, 1352×121 layout at 1440.",
+    "P6_archetype_chip": "PASS — archetype-chip-1535465 renders with text 'BOWLING DEFENCE' after cache warm.",
+    "P7_focus_visible_ring": "PASS — nav-logo, nav-live, nav-time-machine, nav-players, nav-about all show 2px amber outline rgba(246,168,35,0.85) on Tab focus.",
+    "P8_rating_badge_fixed_width": "FAIL — min-width not large enough; see UI bug above.",
+    "P9_player_profile_tenure_skeleton": "PASS — player-loading skeleton visible on load (no 'Loading profile' text). Tenure '2016-05-29 → 2017-04-14' is chronologically ordered.",
+    "P10_ask_pitchwise_coming_soon": "PASS — disabled attribute present, title='Coming soon', class contains cursor-not-allowed."
+  },
+  "regression_checks": {
+    "match_verdict_order": "PASS — header@y=112, verdict@y=265, momentum@y=929.5 (correct visual order).",
+    "sse_live_replay": "PASS (implicit — Live page renders 'REPLAYING Ball 6 / 250').",
+    "time_machine_navigation": "Not re-verified this iteration, but bottom-nav-time-machine → /time-machine navigation confirmed.",
+    "player_profile_career_rating": "Not asserted (out of scope for polish, no regressions observed)."
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(MEDIUM) RatingBadge.jsx — increase min-w for sm (44px→~64px) and md (68px→~88px) so 4-char ratings ('10.0') don't cause layout jump. Verify by comparing bounding boxes of '9.5' vs '10.0' badges on /players — should be equal.",
+    "(LOW, pre-existing) RatingBadge is a <button>; wrapping it inside a player-card <button> triggers 'button cannot descend from button' hydration warnings on /players and /players/:id best-performances grid. Consider rendering RatingBadge as a <span> when non-clickable, or restructuring player-card to a <div role=button>."
+  ],
+  "critical_code_review_comments": [
+    "TopNav.jsx mobile bottom-nav is well-structured with distinct data-testids and md:hidden classes; NavLink active-state icon tint via inline style is clean.",
+    "MatchExplanation.jsx skeleton state is well-designed — 6 pulsing bullet rows mirror the resolved layout so no CLS on transition.",
+    "LiveEmptyState.jsx grid class toggle `${lastMatch ? 'grid-cols-1 md:grid-cols-2 max-w-[720px]' : 'grid-cols-1 max-w-[420px]'}` correctly balances the layout in both variants.",
+    "RatingBadge min-width values were chosen for 3-char content; consider defining widths in terms of ch units (e.g., min-w-[4ch]) or CSS `text-align: center; font-variant-numeric: tabular-nums` combined with fixed width for a bulletproof fix.",
+    "Nested <button> inside player-card is not a polish-pass introduction but should be tracked."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "90% (9/10 polish items PASS; all 3 P0s PASS; all regressions PASS)"},
+  "seed_data_creation": "Pre-warmed narration cache for match 1535465 via in-page fetch to enable archetype chip assertion.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Only outstanding polish item is P8 RatingBadge equal-width. After main agent bumps min-w on sm/md sizes in /app/frontend/src/components/rating/RatingBadge.jsx, re-verify by measuring bounding boxes of [data-testid^=player-rating-] elements on /players — '9.x' vs '10.x' should have identical widths. All other polish items and regressions are green as of iteration_11.",
+  "rca of the issue": "P8: RatingBadge uses Tailwind `min-w-[44px]` for sm and `min-w-[68px]` for md. The text 'rating-num text-lg' at sm renders '9.5' ~26px wide (fits in 44px min-w with px-2 padding → 44px total) but '10.0' renders ~40px wide, exceeding min-w so the button grows to accommodate content (48.77px→59.69px, ~11px jump). Fix: increase min-w to a value >= the wider content (e.g., min-w-[64px] for sm, min-w-[88px] for md) OR use a fixed `w-[NNpx]` with center alignment."
+}

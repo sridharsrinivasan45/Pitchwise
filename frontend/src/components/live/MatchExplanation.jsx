@@ -35,9 +35,32 @@ export default function MatchExplanation({ matchId }) {
 
   if (loading) {
     return (
-      <section className="rounded-xl border border-border/50 bg-card/40 p-6" data-testid="match-explanation-loading">
-        <p className="text-[10px] uppercase tracking-widest text-dim mb-2">Match verdict</p>
-        <p className="text-dim text-sm">Reading the engine…</p>
+      <section
+        className="rounded-xl border border-border/50 bg-card/40 p-6 md:p-8"
+        data-testid="match-explanation-loading"
+        aria-busy="true"
+        aria-label="Loading match verdict"
+      >
+        <p className="text-[10px] uppercase tracking-widest text-dim mb-3"
+          style={{ color: "hsl(var(--primary) / 0.6)" }}>
+          Match verdict
+        </p>
+        <div className="space-y-2.5 mb-6">
+          <div className="h-6 md:h-7 rounded-md bg-secondary/70 animate-pulse w-[80%]" />
+          <div className="h-6 md:h-7 rounded-md bg-secondary/50 animate-pulse w-[55%]" />
+        </div>
+        <div className="pl-4 border-l-2 border-border/40 mb-6 space-y-2">
+          <div className="h-3 rounded bg-secondary/60 animate-pulse w-24" />
+          <div className="h-4 rounded bg-secondary/40 animate-pulse w-[70%]" />
+        </div>
+        <div className="space-y-2.5">
+          {[85, 78, 82, 70, 76, 68].map((w, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="mt-2 h-1.5 w-1.5 rounded-full bg-secondary/60 shrink-0" />
+              <div className="h-4 rounded bg-secondary/40 animate-pulse" style={{ width: `${w}%` }} />
+            </div>
+          ))}
+        </div>
       </section>
     );
   }

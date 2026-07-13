@@ -97,6 +97,36 @@
   .divider-soft { border-color: hsla(40, 20%, 90%, 0.08); }
 }
 
+/* ─── Global accessibility: visible focus ring for keyboard users ─── */
+@layer base {
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary) / 0.7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Buttons that use bespoke borders keep their own visual focus via primary color */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--primary) / 0.85);
+    outline-offset: 2px;
+  }
+}
+
+/* Bottom-nav padding: reserve space on mobile so the fixed bottom nav
+   never covers page content. */
+@layer base {
+  @media (max-width: 767px) {
+    body { padding-bottom: 4rem; }
+  }
+}
+
+
 @layer base {
   [data-debug-wrapper="true"] { display: contents !important; }
   [data-debug-wrapper="true"] > * {

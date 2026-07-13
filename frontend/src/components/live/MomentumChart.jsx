@@ -41,7 +41,7 @@ function LiveHeadShape(props) {
 export default function MomentumChart({ momentum = [], moments = [], teamShort = [], live = false }) {
   if (!momentum.length) {
     return (
-      <div className="h-[280px] w-full rounded-lg border border-border/50 bg-card/40 flex items-center justify-center text-dim text-sm">
+      <div className="h-[180px] md:h-[280px] w-full rounded-lg border border-border/50 bg-card/40 flex items-center justify-center text-dim text-sm px-6 text-center">
         Momentum will appear once the match starts.
       </div>
     );
@@ -89,7 +89,7 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
         </p>
       </div>
 
-      <div className="h-[260px] w-full">
+      <div className="h-[220px] md:h-[260px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
             <defs>

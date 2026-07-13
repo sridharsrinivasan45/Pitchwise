@@ -19,25 +19,50 @@ export default function PlayerProfile() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="max-w-[1400px] mx-auto px-6 py-16 text-dim text-sm" data-testid="player-loading">Loading profile…</div>;
+  if (loading) return (
+    <div className="max-w-[1400px] mx-auto px-6 py-10" data-testid="player-loading" aria-busy="true">
+      <div className="h-3 bg-secondary/50 rounded w-16 mb-4 animate-pulse" />
+      <div className="h-12 bg-secondary/70 rounded w-64 mb-3 animate-pulse" />
+      <div className="h-4 bg-secondary/40 rounded w-80 mb-8 animate-pulse" />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border/40 bg-card/40 p-4">
+            <div className="h-3 bg-secondary/50 rounded w-16 mb-2 animate-pulse" />
+            <div className="h-7 bg-secondary/70 rounded w-20 animate-pulse" />
+          </div>
+        ))}
+      </div>
+      <div className="h-52 rounded-lg bg-card/40 border border-border/40 animate-pulse" />
+    </div>
+  );
   if (error) return <div className="max-w-[1400px] mx-auto px-6 py-10" data-testid="player-error"><div className="p-4 rounded-md border border-destructive/40 bg-negative-soft text-sm">{error}</div></div>;
   if (!profile) return null;
 
   const tl = (profile.timeline || []).map((t, i) => ({ i, rating: t.overall_rating, date: t.date, match_id: t.match_id }));
+  // Some ingested docs store first_seen/last_seen in reversed order; render them chronologically.
+  const [tenureStart, tenureEnd] = (() => {
+    const a = profile.first_seen, b = profile.last_seen;
+    if (!a || !b) return [a, b];
+    return a <= b ? [a, b] : [b, a];
+  })();
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-10" data-testid="player-profile-page">
-      <div className="mb-8 flex items-start gap-6 flex-wrap">
-        <div className="flex-1 min-w-[280px]">
+      <div className="mb-8 flex items-start gap-6 flex-wrap md:flex-nowrap">
+        <div className="flex-1 min-w-[240px]">
           <p className="text-dim text-[11px] uppercase tracking-widest mb-2">Player</p>
           <h1 className="font-editorial text-4xl md:text-5xl leading-tight mb-2">{profile.display_name}</h1>
           <p className="text-sm text-muted-foreground">
             <span className="rating-num">{profile.teams.join(" · ")}</span>
-            <span className="text-dim"> · </span>
-            <span className="rating-num">{profile.first_seen} → {profile.last_seen}</span>
+            {tenureStart && tenureEnd && (
+              <>
+                <span className="text-dim"> · </span>
+                <span className="rating-num">{tenureStart} → {tenureEnd}</span>
+              </>
+            )}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-start md:items-end gap-1 shrink-0">
           <p className="text-[10px] uppercase tracking-widest text-dim">Career rating (avg)</p>
           <RatingBadge rating={profile.career.avg_rating} delta={0} size="lg" showDelta={false} testId="player-career-rating" />
           <p className="text-xs text-dim rating-num">peak {profile.career.best_rating.toFixed(1)} · {profile.career.matches} matches</p>
