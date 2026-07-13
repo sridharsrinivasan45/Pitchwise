@@ -261,7 +261,13 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
 - ✅ Career rating aggregation uses engine methodology (verified)
 - ✅ Momentum chart innings-break divider (verified)
 - ✅ Live empty state + last-match persistence, no hardcoded ids (verified iter 9)
-- 🛑 STOP for user review before starting Milestone 5
-- 🔴 Milestone 5: AI Narrator (Claude Sonnet 4.5 via Emergent LLM key) — next
-- 🟠 Ask PitchWise (Cmd+K Analyst)
+- ✅ **Milestone 5 — AI Narrator (evidence-grounded explanation layer)** (verified iter 10, 22/22 backend, 100% frontend)
+  - Deterministic template-first pipeline: `build_evidence → render_verdict/turning/players → _polish_one (Claude Sonnet 4.5) → _verify_polished`
+  - LLM polish silently falls back to template on any grounding-verifier failure
+  - Verifier enforces: (a) every number in polished output exists in evidence dict, (b) hard-blocked wordlist (`\b(brilliant|shocking|thrilling|...)\b`)
+  - New endpoint: `GET /api/matches/{id}/narration?polish=<0|1>&refresh=<0|1>`, cached in `db.narrations`
+  - Time Machine cards left-join cached verdict; Live page renders `MatchExplanation` between MatchHeader and MomentumChart (Score → Verdict → Momentum → Impact Board)
+  - Verified across 5 IPL archetypes: miracle_chase (1359487), runs_thriller (1359542), one_sided/batting-dominated (1082591, 1082596), bowling_defence (1535465), super_over (1178426)
+- 🛑 STOP for user review before any additional features
+- 🟠 Ask PitchWise (Cmd+K Analyst) — next
 - 🔵 Historical Parallels, Innings DNA share card

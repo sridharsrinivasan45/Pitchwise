@@ -517,11 +517,12 @@ def render_player_explanation(p: dict) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 _BANNED_TOKENS = [
-    "brilliant", "heroic", "genius", "masterful", "shocking", "disgraceful",
-    "poor", "terrible", "awful", "unbelievable", "phenomenal", "godly",
-    "the theft", "momentum killer", "resource drain", "carnage",
-    "dramatic", "sensational", "thrilling",
+    r"brilliant", r"heroic", r"genius", r"masterful", r"shocking", r"disgraceful",
+    r"poor", r"terrible", r"awful", r"unbelievable", r"phenomenal", r"godly",
+    r"the theft", r"momentum killer", r"resource drain", r"carnage",
+    r"dramatic", r"sensational", r"thrilling",
 ]
+_BANNED_RE = re.compile(r"\b(" + "|".join(_BANNED_TOKENS) + r")\b", re.IGNORECASE)
 
 _NUM_RE = re.compile(r"[-+]?\d+\.?\d*")
 
@@ -554,8 +555,7 @@ def _numbers_in_evidence(ev: dict) -> set[float]:
 
 
 def _verify_polished(polished: str, evidence: dict) -> bool:
-    low = polished.lower()
-    if any(bad in low for bad in _BANNED_TOKENS):
+    if _BANNED_RE.search(polished):
         return False
     nums = _numbers_in(polished)
     ev_nums = _numbers_in_evidence(evidence)
