@@ -222,7 +222,7 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
 
 ---
 
-## Session 2026-02 — Product-experience polish (before Milestone 5)
+### Session 2026-02 — Product-experience polish (before Milestone 5)
 
 ### Fix 1: Historical matches now open in Live (P0)
 - Root cause: `Live.jsx` ignored the `?match_id=` query param — always fetched the featured match. Fallback was also broken: `if (!featured.length)` was checking `.length` on an object `{matches, total}`, so it always short-circuited.
@@ -243,11 +243,24 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
 - Applying that same aggregator to full career (not just a season) yields **Kohli 6.6, Bumrah 8.5** — passes intuitive sanity check.
 - **No code changed yet** — full diagnosis in `/app/memory/CAREER_RATING_DIAGNOSIS.md`. Awaiting user approval before applying the fix in `routes/players.py`.
 
+### Fix 3: Career rating aggregation (P1) — APPROVED & IMPLEMENTED
+- `routes/players.py` now imports `engine.core.ratings_from_wpa.wpa_to_rating` (unchanged engine function) and applies it at the correct aggregation stage.
+- New `_career_rating(avg_wpa, n_matches)` helper mirrors `build_season_ratings`: `reliability = n/(n+5)`, `career_rating = wpa_to_rating(avg_wpa * reliability, scale=0.05)`.
+- List endpoint groups on `avg_wpa` (engine currency) instead of `avg overall_rating`. Sort keys unchanged (rating/matches/name).
+- Profile endpoint returns `career.avg_rating`, `career.avg_batting`, `career.avg_bowling` all computed via the same aggregator on their respective WPA columns. Also exposes `career.avg_wpa` for auditability. `career.best_rating` (peak single-match) unchanged.
+- Sanity check on well-known players: Kohli 6.63, Bumrah 8.54, Dhoni 5.06 (defensible — his median per-match WPA is negative), AB de Villiers 9.57, Sunil Narine 9.12, Andre Russell 8.78, Rashid Khan 9.31. All within expected ranges.
+- Engine `core/` untouched. Verified by testing_agent iteration_8.
+
+### Fix 4: Momentum chart innings-break divider (P1) — DONE
+- `MomentumChart.jsx` now parses innings from ball_id (`-i(\d+)-`), detects innings transitions, and renders a dashed vertical `ReferenceLine` with "Innings break" / "Super over" labels for each transition.
+- Verified visually and by testing_agent iteration_8 across historical + featured matches.
+
 ### Still up next
 - ✅ Historical matches load in Live (verified)
 - ✅ WhySheet works on any match (verified)
-- ⏳ Career rating aggregation fix (approval pending; diagnosis complete)
-- ⏳ Momentum chart innings-break vertical divider (P1 polish, not started)
-- 🔴 Milestone 5: AI Narrator (Claude Sonnet 4.5 via Emergent LLM key) — next once above two are approved
+- ✅ Career rating aggregation uses engine methodology (verified)
+- ✅ Momentum chart innings-break divider (verified)
+- 🛑 STOP for user review (as requested) before starting Milestone 5
+- 🔴 Milestone 5: AI Narrator (Claude Sonnet 4.5 via Emergent LLM key) — next
 - 🟠 Ask PitchWise (Cmd+K Analyst)
 - 🔵 Historical Parallels, Innings DNA share card
