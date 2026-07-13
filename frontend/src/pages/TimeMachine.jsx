@@ -34,7 +34,14 @@ function MatchCard({ m, onClick, featured = false }) {
       <h3 className="font-editorial text-xl mb-1 leading-tight">
         {m.curation_title || `${m.team_short.join(" vs ")}`}
       </h3>
-      {m.curation_hook && <p className="text-muted-foreground text-sm mb-3">{m.curation_hook}</p>}
+      {m.verdict ? (
+        <p className="text-muted-foreground text-sm mb-3 leading-snug line-clamp-2"
+          data-testid={`match-verdict-${m.match_id}`}>
+          {m.verdict}
+        </p>
+      ) : m.curation_hook ? (
+        <p className="text-muted-foreground text-sm mb-3">{m.curation_hook}</p>
+      ) : null}
       <div className="flex items-center justify-between text-sm mt-2">
         <span className="rating-num text-dim">{m.venue?.split(",")[0] || m.city || "—"}</span>
         <div className="flex items-center gap-2">

@@ -1,0 +1,39 @@
+{
+  "summary": "M5 Narrator (evidence-grounded explanation layer) fully verified. Backend narration endpoint returns correct shape, archetypes correctly classified across all 5 demo matches (1359487→miracle_chase, 1359542→runs_thriller, 1535465→bowling_defence, 1082596→one_sided, 1178426→super_over), grounding invariant holds (every number in polished output exists in evidence within 0.15 tol), banned wordlist enforced, cache works (identical payload on 2nd call, refresh=1 recomputes), and /api/matches list left-joins verdict+archetype. Frontend Live page renders MatchExplanation between MatchHeader and NarrationLine with data-testid=match-explanation containing match-verdict (h2), turning-point, player-explanations; TimeMachine cards show match-verdict-<id>; empty state regression intact.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/matches/{id}/narration", "issue": "Banned-word verifier uses substring matching ('poor' in 'Pooran', would also flag 'genius' inside future names). Verifier will always reject legitimate LLM polish of any sentence containing player names that substring-match banned tokens, silently falling back to template. Suggest word-boundary matching in _verify_polished (services/narrator.py:558) to allow LLM polish to run on such sentences."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "MomentumChart (Live page initial paint)", "issues": ["Recharts warns width(-1)/height(-1) on first render before container measures — pre-existing from iter 9, cosmetic."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_narration_m5.py",
+    "/app/test_reports/pytest/iter10_results.xml"
+  ],
+  "action_items": [
+    "(LOW) In services/narrator.py::_verify_polished, use word-boundary regex for banned-token check so player names like 'Pooran' don't force the verifier to reject legitimate LLM polish."
+  ],
+  "critical_code_review_comments": [
+    "narrator.py grounding contract is well-implemented: build_evidence → render_* → _polish_one → _verify_polished with silent template fallback. Number verification with 0.15 tolerance and percentage-scale variants covers rounding correctly.",
+    "_classify_archetype ordering is deterministic and rule-based (first match wins). Verified against 5 demo matches.",
+    "get_or_build_narration correctly gates cache on (match_id, polish) tuple so polish=0/1 don't clobber each other's cache in a wrong way — but only ONE doc per match_id is stored (upsert on match_id only), meaning the last-written polish flag wins. Not a bug, just a note: featured list join always reads whatever is cached.",
+    "routes/matches.py list left-join is efficient (single $in query) and degrades gracefully to null verdict for non-cached matches.",
+    "Live.jsx correctly places MatchExplanation between MatchHeader and NarrationLine as spec required.",
+    "MatchExplanation.jsx returns null on error (silent), preserving layout — good design choice for a non-critical add-on."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_narration_m5.py (new — 22 tests)"
+  ],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "100% (all 4 frontend flows: Live-1359487, Live-1535465, Live-1359542, TimeMachine card, empty-state)"},
+  "seed_data_creation": "none — used existing demo matches",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "M5 fully green. Narration cache lives in db.narrations keyed by match_id (one doc per match, polish flag stored). Verdict polished text for 1359487 currently reads: 'KKR completed the chase despite their win probability dropping to 1.2% during the innings.' Turning point: '20th over of innings 2 increased win probability by 107.6%, exceeding the combined change of the previous 8 overs (-27.8%).' Six player rows render as bullet list. TimeMachine featured card 1359487 shows verdict fallback correctly. Data-testids in use: match-explanation, match-verdict, turning-point, player-explanations, player-explanation-<player_id>, match-verdict-<match_id>."
+}

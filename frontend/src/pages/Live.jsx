@@ -8,6 +8,7 @@ import ImpactBoard from "@/components/live/ImpactBoard";
 import MomentCard from "@/components/live/MomentCard";
 import ReplayControls from "@/components/live/ReplayControls";
 import LiveEmptyState from "@/components/live/LiveEmptyState";
+import MatchExplanation from "@/components/live/MatchExplanation";
 import WhySheet from "@/components/rating/WhySheet";
 import useMatchStream from "@/hooks/useMatchStream";
 import { readLastMatch, saveLastMatch } from "@/lib/lastMatch";
@@ -166,6 +167,11 @@ export default function Live() {
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-8" data-testid="live-page">
       <MatchHeader match={match} currentOver={state?.current_over} currentBall={state?.current_ball} />
+
+      {/* Story before statistics — Match Verdict sits between score and momentum */}
+      <div className="mt-6">
+        <MatchExplanation matchId={match.match_id} />
+      </div>
 
       <div className="mt-6">
         <NarrationLine text={narration || "PitchWise is watching. Press play to begin the replay."} />

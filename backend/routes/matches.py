@@ -17,12 +17,10 @@ async def list_matches(
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
-    if featured:
-        matches = await adapter.list_matches(featured_only=True)
-        return {"matches": [m.model_dump() for m in matches], "total": len(matches)}
-
     db = get_db()
     q: dict = {}
+    if featured:
+        q["featured"] = True
     if season:
         q["season"] = season
     if team:
@@ -43,8 +41,23 @@ async def list_matches(
     proj = {"_id": 0}
     docs = await db.matches.find(q, proj).sort(sort_key).skip(offset).limit(limit).to_list(limit)
 
+    # Left-join cached verdicts (narrations). No forced compute — cards degrade gracefully.
+    match_ids = [d["match_id"] for d in docs]
+    narration_docs = {}
+    if match_ids:
+        async for n in db.narrations.find(
+            {"match_id": {"$in": match_ids}},
+            {"_id": 0, "match_id": 1, "payload.verdict.polished": 1, "payload.verdict.sentence": 1, "payload.verdict.archetype": 1},
+        ):
+            v = ((n.get("payload") or {}).get("verdict") or {})
+            narration_docs[n["match_id"]] = {
+                "verdict": v.get("polished") or v.get("sentence"),
+                "archetype": v.get("archetype"),
+            }
+
     def _summary(d: dict) -> dict:
         teams_raw = d.get("teams", [])
+        nn = narration_docs.get(d["match_id"], {})
         return {
             "match_id": d["match_id"],
             "season": d.get("season", ""),
@@ -64,6 +77,8 @@ async def list_matches(
             "total_impact": float(d.get("total_impact", 0.0)),
             "has_dls": bool(d.get("has_dls", False)),
             "has_super_over": bool(d.get("has_super_over", False)),
+            "verdict": nn.get("verdict"),
+            "archetype": nn.get("archetype"),
         }
 
     return {"matches": [_summary(d) for d in docs], "total": total}
