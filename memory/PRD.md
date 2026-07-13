@@ -269,5 +269,11 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
   - Time Machine cards left-join cached verdict; Live page renders `MatchExplanation` between MatchHeader and MomentumChart (Score → Verdict → Momentum → Impact Board)
   - Verified across 5 IPL archetypes: miracle_chase (1359487), runs_thriller (1359542), one_sided/batting-dominated (1082591, 1082596), bowling_defence (1535465), super_over (1178426)
 - 🛑 STOP for user review before any additional features
+- ✅ **UX polish pass (10 highest-impact improvements)** (verified iter 11, all 10 items PASS after RatingBadge fix)
+  - #1 Mobile bottom nav (P0) · #2 Match Verdict skeleton loading (P0) · #3 Live empty-state balance (P0)
+  - #4 Match Header mobile stacking · #5 Time Machine 2-row filter layout · #6 Archetype chip on cards
+  - #7 Global focus-visible outlines · #8 RatingBadge equal-width (64/88/128 min-w) · #9 Player Profile skeleton + tenure chronology
+  - #10 Ask PitchWise "Coming soon" affordance · bonus: MomentumChart mobile height + TimeMachine grid skeleton
+- 🛑 STOP for user review after polish pass
 - 🟠 Ask PitchWise (Cmd+K Analyst) — next
 - 🔵 Historical Parallels, Innings DNA share card

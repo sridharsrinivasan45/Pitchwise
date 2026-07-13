@@ -15,9 +15,9 @@ export default function RatingBadge({
 }) {
   const tone = ratingTone(rating);
   const dims = {
-    sm: { num: "text-lg", pad: "px-2 py-1", delta: "text-[10px]", minW: "min-w-[44px]" },
-    md: { num: "text-3xl", pad: "px-3 py-2", delta: "text-xs", minW: "min-w-[68px]" },
-    lg: { num: "text-5xl", pad: "px-4 py-3", delta: "text-sm", minW: "min-w-[110px]" },
+    sm: { num: "text-lg", pad: "px-2 py-1", delta: "text-[10px]", minW: "min-w-[64px]" },
+    md: { num: "text-3xl", pad: "px-3 py-2", delta: "text-xs", minW: "min-w-[88px]" },
+    lg: { num: "text-5xl", pad: "px-4 py-3", delta: "text-sm", minW: "min-w-[128px]" },
   }[size];
 
   const toneRing = {
