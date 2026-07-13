@@ -1,6 +1,6 @@
 import {
   Area, AreaChart, ResponsiveContainer, XAxis, YAxis,
-  ReferenceDot, Tooltip,
+  ReferenceDot, ReferenceLine, Tooltip, Label,
 } from "recharts";
 
 function ChartTooltip({ teamShort }) {
@@ -47,11 +47,23 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
     );
   }
 
-  const data = momentum.map((m, i) => ({
-    idx: i,
-    wp: Math.round(m.wp * 100),
-    label: `${(m.over ?? 0) + 1}.${m.ball}`,
-  }));
+  const data = momentum.map((m, i) => {
+    // Innings from canonical ball_id `<match>-i<inn>-o<over>.<ball>`
+    const idMatch = /-i(\d+)-/.exec(m.ball_id || "");
+    const innings = idMatch ? parseInt(idMatch[1], 10) : 1;
+    return {
+      idx: i,
+      wp: Math.round(m.wp * 100),
+      label: `${(m.over ?? 0) + 1}.${m.ball}`,
+      innings,
+    };
+  });
+
+  // Find every innings boundary index (first ball of innings 2, and 3 if super over)
+  const inningsBreaks = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i].innings !== data[i - 1].innings) inningsBreaks.push(i);
+  }
 
   const momentByBallId = new Map(moments.map((m) => [m.ball_id, m]));
   const dotPoints = momentum
@@ -98,6 +110,25 @@ export default function MomentumChart({ momentum = [], moments = [], teamShort =
               cursor={{ stroke: "hsla(38,92%,55%,0.4)", strokeWidth: 1 }}
               content={ChartTooltip({ teamShort })}
             />
+            {inningsBreaks.map((idx, n) => (
+              <ReferenceLine
+                key={`inn-brk-${idx}`}
+                x={idx}
+                stroke="hsla(220, 8%, 60%, 0.55)"
+                strokeDasharray="4 4"
+                strokeWidth={1}
+                ifOverflow="visible"
+              >
+                <Label
+                  value={n === 0 ? "Innings break" : "Super over"}
+                  position="top"
+                  fill="hsla(220, 8%, 65%, 0.9)"
+                  fontSize={10}
+                  fontFamily="JetBrains Mono"
+                  offset={6}
+                />
+              </ReferenceLine>
+            ))}
             <Area
               type="monotone"
               dataKey="wp"

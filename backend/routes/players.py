@@ -1,9 +1,32 @@
-"""Player routes — index + profile. Pure data access, no analytics."""
+"""Player routes — index + profile. Pure data access, no analytics.
+
+Career aggregation uses the engine's OWN `wpa_to_rating` function
+(`engine.core.ratings_from_wpa.wpa_to_rating`) applied at the engine's
+season-style aggregation stage: `avg WPA -> reliability shrink -> tanh`.
+This mirrors `engine.core.ratings_from_wpa.build_season_ratings` extended
+from a single season to a full career, so career and season ratings are
+methodologically consistent. Nothing in `engine/core/` is modified.
+"""
 from fastapi import APIRouter, HTTPException, Query
 from core.db import get_db
 from data.team_aliases import resolve_team
+from engine.core.ratings_from_wpa import wpa_to_rating
 
 router = APIRouter(prefix="/players", tags=["players"])
+
+# Engine's season aggregator params (from build_season_ratings):
+#   reliability = n / (n + k),  scale = 0.05
+_RELIABILITY_K = 5
+_CAREER_SCALE = 0.05
+
+
+def _career_rating(avg_wpa: float, n_matches: int) -> float:
+    """Engine's own season aggregation, extended to full career."""
+    if n_matches <= 0:
+        return 5.0
+    reliability = n_matches / (n_matches + _RELIABILITY_K)
+    adjusted = float(avg_wpa) * reliability
+    return float(wpa_to_rating(adjusted, scale=_CAREER_SCALE))
 
 
 def _current_team_short(teams: list[str]) -> str:
@@ -42,8 +65,9 @@ async def list_players(
             "_id": "$player_id",
             "player_name": {"$last": "$player_name"},
             "matches": {"$sum": 1},
-            "avg_rating": {"$avg": "$overall_rating"},
-            "best_rating": {"$max": "$overall_rating"},
+            "avg_wpa": {"$avg": "$total_wpa"},          # engine currency — aggregate here
+            "peak_wpa": {"$max": "$total_wpa"},
+            "best_rating": {"$max": "$overall_rating"}, # peak single-match rating (already engine-produced)
             "total_runs": {"$sum": "$runs"},
             "total_wickets": {"$sum": "$wickets"},
             "total_balls_faced": {"$sum": "$balls_faced"},
@@ -54,12 +78,15 @@ async def list_players(
     if search:
         pipeline.append({"$match": {"player_name": {"$regex": search, "$options": "i"}}})
 
+    # Sorting uses the engine-aggregated career metric so ranking is consistent
+    # with how the career rating is displayed. We sort on avg_wpa (a monotone
+    # transform of career_rating) to keep the Mongo pipeline pure.
     if sort == "matches":
-        pipeline.append({"$sort": {"matches": -1, "avg_rating": -1}})
+        pipeline.append({"$sort": {"matches": -1, "avg_wpa": -1}})
     elif sort == "name":
         pipeline.append({"$sort": {"player_name": 1}})
     else:
-        pipeline.append({"$sort": {"avg_rating": -1, "matches": -1}})
+        pipeline.append({"$sort": {"avg_wpa": -1, "matches": -1}})
 
     total_pipeline = pipeline + [{"$count": "n"}]
     total_docs = await db.match_ratings.aggregate(total_pipeline).to_list(1)
@@ -93,7 +120,7 @@ async def list_players(
             "team_short": current,
             "team_history": [resolve_team(t)["short"] for t in teams],
             "matches": int(r["matches"]),
-            "career_rating": round(float(r["avg_rating"]), 2),
+            "career_rating": round(_career_rating(r["avg_wpa"], int(r["matches"])), 2),
             "best_rating": round(float(r["best_rating"]), 2),
             "runs": int(r["total_runs"]),
             "wickets": int(r["total_wickets"]),
@@ -116,10 +143,10 @@ async def get_player_profile(player_id: str):
         {"$group": {
             "_id": None,
             "matches": {"$sum": 1},
-            "avg_rating": {"$avg": "$overall_rating"},
-            "best_rating": {"$max": "$overall_rating"},
-            "avg_batting": {"$avg": "$batting_rating"},
-            "avg_bowling": {"$avg": "$bowling_rating"},
+            "avg_wpa": {"$avg": "$total_wpa"},           # engine currency
+            "avg_batting_wpa": {"$avg": "$batting_wpa"},
+            "avg_bowling_wpa": {"$avg": "$bowling_wpa"},
+            "best_rating": {"$max": "$overall_rating"},  # peak single-match rating
             "total_runs": {"$sum": "$runs"},
             "total_wickets": {"$sum": "$wickets"},
             "total_balls_faced": {"$sum": "$balls_faced"},
@@ -127,6 +154,7 @@ async def get_player_profile(player_id: str):
         }},
     ]).to_list(1)
     stats = stats[0] if stats else {}
+    n_matches = int(stats.get("matches", 0))
 
     # Best 5 performances
     best_docs = await db.match_ratings.find(
@@ -183,11 +211,12 @@ async def get_player_profile(player_id: str):
         "first_seen": p.get("first_seen"),
         "last_seen": p.get("last_seen"),
         "career": {
-            "matches": int(stats.get("matches", 0)),
-            "avg_rating": round(float(stats.get("avg_rating", 0.0)), 2),
+            "matches": n_matches,
+            "avg_rating": round(_career_rating(stats.get("avg_wpa", 0.0), n_matches), 2),
             "best_rating": round(float(stats.get("best_rating", 0.0)), 2),
-            "avg_batting": round(float(stats.get("avg_batting", 0.0)), 2),
-            "avg_bowling": round(float(stats.get("avg_bowling", 0.0)), 2),
+            "avg_batting": round(_career_rating(stats.get("avg_batting_wpa", 0.0), n_matches), 2),
+            "avg_bowling": round(_career_rating(stats.get("avg_bowling_wpa", 0.0), n_matches), 2),
+            "avg_wpa": round(float(stats.get("avg_wpa", 0.0)), 4),
             "total_runs": int(stats.get("total_runs", 0)),
             "total_wickets": int(stats.get("total_wickets", 0)),
             "total_balls_faced": int(stats.get("total_balls_faced", 0)),
