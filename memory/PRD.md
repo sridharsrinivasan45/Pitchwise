@@ -260,7 +260,8 @@ builder, blog, settings, onboarding tour, dark-mode toggle.
 - ✅ WhySheet works on any match (verified)
 - ✅ Career rating aggregation uses engine methodology (verified)
 - ✅ Momentum chart innings-break divider (verified)
-- 🛑 STOP for user review (as requested) before starting Milestone 5
+- ✅ Live empty state + last-match persistence, no hardcoded ids (verified iter 9)
+- 🛑 STOP for user review before starting Milestone 5
 - 🔴 Milestone 5: AI Narrator (Claude Sonnet 4.5 via Emergent LLM key) — next
 - 🟠 Ask PitchWise (Cmd+K Analyst)
 - 🔵 Historical Parallels, Innings DNA share card
