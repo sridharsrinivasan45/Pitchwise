@@ -1,0 +1,31 @@
+{
+  "summary": "Iter 9 — verified Live-page refactor: empty state, last-match persistence, continue flow, entries from Time Machine + Players → Best Match all open the SPECIFIC clicked match. No hardcoded runtime match_ids or Rinku narration. Backend regressions (Kohli/Bumrah career ratings) intact.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Players grid — RatingBadge inside player-card button", "issue": "React hydration warning: <button> cannot be a descendant of <button> (RatingBadge renders a button inside the player-card button)", "selector": "[data-testid^=\"player-card-\"] [data-testid^=\"player-rating-\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "MomentumChart (Live page initial paint)", "issues": ["Recharts warns width(-1)/height(-1) on first render before container measures — cosmetic, chart still renders correctly after data arrives"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_live_refactor.py", "/app/test_reports/pytest/iter9_results.xml"],
+  "action_items": [
+    "(Optional/low) Wrap RatingBadge with a non-button wrapper (or disable interactive when inside another button) to remove nested <button> hydration warning on /players.",
+    "(Optional) Set explicit min-height on MomentumChart's ResponsiveContainer to silence Recharts width/height warnings."
+  ],
+  "critical_code_review_comments": [
+    "Live.jsx correctly branches on requestedMatchId and calls saveLastMatch on successful load — no featured fallback remains.",
+    "LiveEmptyState conditionally renders continue-last-match only when preview exists; testids match spec.",
+    "lastMatch.js key 'pitchwise:lastMatch:v1' persists match_id, teams, team_short, season, date, venue, curation_title, result_summary — verified live.",
+    "stream.py narration no longer contains 'Rinku' or over==19 hardcoded branch. Runtime narration is generic (SIX at Ox.y / pressure ...).",
+    "Note: backend/data/ingest_cricsheet.py still references match_id '1359487' and 'Rinku's 5 Sixes' but this is legitimate curation metadata (per problem statement, not a bug)."
+  ],
+  "updated_files": ["/app/backend/tests/test_live_refactor.py (new)"],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "100% (7/7 flows: empty first-time, empty returning, persistence, continue, time-machine open, time-machine no-leak, players→best→live)"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Live page correctly shows LiveEmptyState when no ?match_id. localStorage key is 'pitchwise:lastMatch:v1'. Match cards on TimeMachine use data-testid='match-card-<match_id>'. Players page uses 'player-card-<id>'; PlayerProfile best/recent rows use 'best-<match_id>' and 'recent-<match_id>' (careful — 'best-performances' and 'recent-matches' section wrappers also start with these prefixes, so scope selectors inside those sections)."
+}

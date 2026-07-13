@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { fetchMatches, fetchMatch, fetchMoments, fetchSkipToDeath } from "@/lib/api";
+import { fetchMatch, fetchMoments, fetchSkipToDeath } from "@/lib/api";
 import MatchHeader from "@/components/live/MatchHeader";
 import NarrationLine from "@/components/live/NarrationLine";
 import MomentumChart from "@/components/live/MomentumChart";
 import ImpactBoard from "@/components/live/ImpactBoard";
 import MomentCard from "@/components/live/MomentCard";
 import ReplayControls from "@/components/live/ReplayControls";
+import LiveEmptyState from "@/components/live/LiveEmptyState";
 import WhySheet from "@/components/rating/WhySheet";
 import useMatchStream from "@/hooks/useMatchStream";
+import { readLastMatch, saveLastMatch } from "@/lib/lastMatch";
 
 /**
  * Live page — cinematic replay of a match, ball-by-ball.
  * SSE-powered: state ticks per delivery, ratings animate, momentum extends.
  *
  * Match resolution:
- *   ?match_id=<id>  → replay that specific historical match
- *   (no param)      → fall back to the featured match, if any
+ *   ?match_id=<id>   → replay that specific match (persisted as "last viewed")
+ *   (no param)       → show the empty state (Choose a Match + Continue last)
+ *
+ * No hardcoded match ids. No featured fallback — every entry point is explicit.
  */
 export default function Live() {
   const [params] = useSearchParams();
@@ -26,10 +30,23 @@ export default function Live() {
   const [moments, setMoments] = useState([]); // all-innings moments (for chart dots)
   const [skipTarget, setSkipTarget] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [lastMatch, setLastMatch] = useState(() => readLastMatch());
 
   useEffect(() => {
     let cancelled = false;
+
+    // No match requested → show empty state, refresh last-viewed snapshot.
+    if (!requestedMatchId) {
+      setMatch(null);
+      setMoments([]);
+      setSkipTarget(null);
+      setError(null);
+      setLoading(false);
+      setLastMatch(readLastMatch());
+      return () => { cancelled = true; };
+    }
+
     (async () => {
       setLoading(true);
       setError(null);
@@ -37,27 +54,17 @@ export default function Live() {
       setMoments([]);
       setSkipTarget(null);
       try {
-        // Resolve which match to load.
-        let targetId = requestedMatchId;
-        if (!targetId) {
-          const featured = await fetchMatches({ featured: true });
-          const list = featured?.matches || [];
-          if (!list.length) {
-            if (!cancelled) setLoading(false);
-            return;
-          }
-          targetId = list[0].match_id;
-        }
-
         const [m, mm, skip] = await Promise.all([
-          fetchMatch(targetId),
-          fetchMoments(targetId, 12),
-          fetchSkipToDeath(targetId).catch(() => null),
+          fetchMatch(requestedMatchId),
+          fetchMoments(requestedMatchId, 12),
+          fetchSkipToDeath(requestedMatchId).catch(() => null),
         ]);
         if (cancelled) return;
         setMatch(m);
         setMoments(mm);
         setSkipTarget(skip?.skip_to_ball ?? null);
+        saveLastMatch(m);       // persist for "Continue last viewed"
+        setLastMatch(m);
       } catch (e) {
         if (cancelled) return;
         setError(
@@ -146,20 +153,14 @@ export default function Live() {
   if (error) {
     return (
       <div className="max-w-[1400px] mx-auto px-6 py-10" data-testid="live-error">
-        <div className="p-4 rounded-md border border-destructive/40 bg-negative-soft text-sm">{error}</div>
+        <div className="p-4 rounded-md border border-destructive/40 bg-negative-soft text-sm mb-6">{error}</div>
+        <LiveEmptyState lastMatch={lastMatch && lastMatch.match_id !== requestedMatchId ? lastMatch : null} />
       </div>
     );
   }
 
   if (!match) {
-    return (
-      <div className="max-w-[1400px] mx-auto px-6 py-16" data-testid="live-empty">
-        <h1 className="font-editorial text-3xl mb-2">No live match right now.</h1>
-        <p className="text-muted-foreground">
-          Try the <Link to="/time-machine" className="underline underline-offset-4" style={{ color: "hsl(var(--primary))" }}>Time Machine</Link>.
-        </p>
-      </div>
-    );
+    return <LiveEmptyState lastMatch={lastMatch} />;
   }
 
   return (

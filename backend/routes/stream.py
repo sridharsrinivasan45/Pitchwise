@@ -30,8 +30,6 @@ def _narration_for(ball: dict, top_impact: list, ball_idx: int, total: int) -> s
     runs = ball.get("runs_batter", 0)
     phase = ball.get("phase", "middle")
     if runs == 6:
-        if ball["over"] == 19:
-            return f"SIX at {over_str}. Rinku is rewriting this over — pressure {ball['pressure_index']:.1f}, difficulty {ball['difficulty']:.1f}."
         return f"SIX at {over_str}. Pressure {ball['pressure_index']:.1f}, this one hurts."
     if runs == 4:
         return f"FOUR at {over_str}. Boundary in the {phase} — momentum inches."
