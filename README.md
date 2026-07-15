@@ -1,4 +1,3 @@
-# Here are your Instructions
 # PitchWise 🏏
 
 > **Cricket, Explained.**
